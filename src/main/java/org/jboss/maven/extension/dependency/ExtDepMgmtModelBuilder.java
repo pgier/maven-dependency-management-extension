@@ -6,27 +6,19 @@ import org.apache.maven.model.building.ModelBuildingException;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
 import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 
 @Component(role = DefaultModelBuilder.class)
-public class ExtDepMgmtModelBuilder implements ModelBuilder {
+public class ExtDepMgmtModelBuilder extends DefaultModelBuilder implements ModelBuilder {
 
-    // Seems that having this requirement may cause issues, since jars in lib/ext/ are loaded before the main jars
-    // Need to see this works if we add this as a build extension in the pom (the other way of using an extension)
-    // See http://maven.apache.org/examples/maven-3-lifecycle-extensions.html
-    // It's also possible that we could insert this jar after the main jars are loaded? This isn't documented though.
-    // See /usr/share/maven/bin/m2.conf 's [plexus.core] section
-    
-    //@Requirement(hint = "model-builder-internal")
-    //private DefaultModelBuilder modelBuilderDelegate;
-
+    @Override
     public ModelBuildingResult build(ModelBuildingRequest request) throws ModelBuildingException {
-        System.out.println(">>>> build 1 called <<<<");
-        return null;
+        System.out.println(">>>> build(ModelBuildingRequest) called: [" + request + "]");
+        return super.build(request);
     }
 
+    @Override
     public ModelBuildingResult build(ModelBuildingRequest request, ModelBuildingResult result) throws ModelBuildingException {
-        System.out.println(">>>> build 2 called <<<<");
-        return null;
+        System.out.println(">>>> build(ModelBuildingRequest, ModelBuildingResult) called: [" + request + "] [" + result + "]");
+        return super.build(request, result);
     }
 }
