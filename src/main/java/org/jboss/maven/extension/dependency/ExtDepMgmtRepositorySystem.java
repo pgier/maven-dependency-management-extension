@@ -44,7 +44,7 @@ import org.sonatype.aether.resolution.VersionResult;
  * Allows dependency versions to be overridden
  *
  */
-@Component( role = RepositorySystem.class )
+//@Component( role = RepositorySystem.class )
 public class ExtDepMgmtRepositorySystem
     implements RepositorySystem
 {

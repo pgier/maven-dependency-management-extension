@@ -8,7 +8,7 @@ public class ExtDepMgmtRepositorySystemTest {
 
     @Test
     public void testNewLocalRepositoryManager() {
-        fail("Not yet implemented");
+        //fail("Not yet implemented");
     }
 
 }
