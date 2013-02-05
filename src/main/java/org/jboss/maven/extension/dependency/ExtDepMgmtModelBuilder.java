@@ -7,18 +7,25 @@ import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
 import org.codehaus.plexus.component.annotations.Component;
 
-@Component(role = DefaultModelBuilder.class)
-public class ExtDepMgmtModelBuilder extends DefaultModelBuilder implements ModelBuilder {
+@Component( role = DefaultModelBuilder.class )
+public class ExtDepMgmtModelBuilder
+    extends DefaultModelBuilder
+    implements ModelBuilder
+{
 
     @Override
-    public ModelBuildingResult build(ModelBuildingRequest request) throws ModelBuildingException {
-        System.out.println(">>>> build(ModelBuildingRequest) called: [" + request + "]");
-        return super.build(request);
+    public ModelBuildingResult build( ModelBuildingRequest request )
+        throws ModelBuildingException
+    {
+        // System.out.println(">>>> build(ModelBuildingRequest) called.");
+        return super.build( request );
     }
 
     @Override
-    public ModelBuildingResult build(ModelBuildingRequest request, ModelBuildingResult result) throws ModelBuildingException {
-        System.out.println(">>>> build(ModelBuildingRequest, ModelBuildingResult) called: [" + request + "] [" + result + "]");
-        return super.build(request, result);
+    public ModelBuildingResult build( ModelBuildingRequest request, ModelBuildingResult result )
+        throws ModelBuildingException
+    {
+        // System.out.println(">>>> build(ModelBuildingRequest, ModelBuildingResult) called.");
+        return super.build( request, result );
     }
 }
