@@ -1,13 +1,12 @@
 package org.jboss.maven.extension.dependency;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.maven.repository.internal.DefaultVersionResolver;
 import org.codehaus.plexus.component.annotations.Component;
+import org.jboss.maven.extension.dependency.util.StdoutLogger;
+import org.jboss.maven.extension.dependency.util.SystemProperties;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.artifact.Artifact;
 import org.sonatype.aether.impl.MetadataResolver;
@@ -18,7 +17,6 @@ import org.sonatype.aether.resolution.VersionResolutionException;
 import org.sonatype.aether.resolution.VersionResult;
 import org.sonatype.aether.spi.locator.Service;
 import org.sonatype.aether.spi.locator.ServiceLocator;
-import org.sonatype.aether.spi.log.Logger;
 
 @Component( role = VersionResolver.class )
 public class ExtDepMgmtVersionResolver
@@ -27,10 +25,17 @@ public class ExtDepMgmtVersionResolver
 {
 
     /**
+     * The String separates parts of a Property name
+     */
+    private static final String PROPERTY_NAME_SEPERATOR = ":";
+
+    /**
      * The String that needs to be prepended a system property to make it a version override. <br />
      * ex: -Dversion:junit:junit=4.10
      */
-    private static final String VERSION_PROPERTY_NAME = "version:";
+    private static final String VERSION_PROPERTY_NAME = "version" + PROPERTY_NAME_SEPERATOR;
+
+    private StdoutLogger stdLogger = new StdoutLogger();
 
     /**
      * Key: String of artifactID <br />
@@ -38,57 +43,40 @@ public class ExtDepMgmtVersionResolver
      */
     private final Map<String, String> overrideMap;
 
+    /**
+     * Load overrides list when the object is instantiated
+     */
     public ExtDepMgmtVersionResolver()
     {
-        Map<String, String> overrideMap = new HashMap<String, String>();
+        
+        Map<String, String> propertyMap = SystemProperties.getPropertiesByPrepend( VERSION_PROPERTY_NAME );
 
-        Properties jvmProperties = System.getProperties();
-        List<?> propertyNameList = Collections.list( jvmProperties.propertyNames() );
+        HashMap<String, String> overrideMap = new HashMap<String, String>();
 
-        // Iterate through the JVM properties and pick out ones matching version syntax
-        // Verbose due to the non-typed System.getProperties() returns
-        for ( Object propertyNameObject : propertyNameList )
+        for ( String propertyName : propertyMap.keySet() )
         {
-            if ( propertyNameObject instanceof String )
+            // Split the name portion into parts (ex: junit:junit to {junit, junit})
+            String[] propertyNameParts = propertyName.split( PROPERTY_NAME_SEPERATOR );
+
+            if ( propertyNameParts.length == 2 )
             {
-                String propertyName = (String) propertyNameObject;
-                if ( propertyName.startsWith( VERSION_PROPERTY_NAME ) )
-                {
-                    Object propertyValueObject = jvmProperties.get( propertyNameObject );
-                    if ( propertyValueObject instanceof String )
-                    {
-                        String propertyValue = (String) propertyValueObject;
+                // Part 1 is the group name. ex: org.apache.maven.plugins
+                String groupID = propertyNameParts[0];
+                // Part 2 is the artifact ID. ex: junit
+                String artifactID = propertyNameParts[1];
 
-                        // Split the name portion into parts (ex: version:junit:junit to {version, junit, junit})
-                        String[] propertyNameParts = propertyName.split( ":" );
+                // The value of the property is the desired version. ex: 3.0
+                String version = propertyMap.get( propertyName );
 
-                        if ( propertyNameParts.length == 3 )
-                        {
-                            // Part 0 not used (the VERSION_PROPERTY_NAME)
+                stdLogger.debug( "Detected version override property. Group: " + groupID + "  ArtifactID: " + artifactID
+                    + "  Target Version: " + version );
 
-                            // ex: org.apache.maven.plugins
-                            String groupID = propertyNameParts[1];
-
-                            // ex: junit
-                            String artifactID = propertyNameParts[2];
-
-                            // ex: 3.0
-                            String version = propertyValue;
-
-                            System.out.printf( ">> Detected version override property. Group: %s  Name: %s  Value: %s\n",
-                                               groupID, artifactID, version );
-
-                            // Not using groupID at the moment
-                            overrideMap.put( artifactID, version );
-                        }
-                        else
-                        {
-                            // Error, don't know how to handle it properly yet
-                            System.err.println( ">> Detected bad version override property." );
-                        }
-
-                    }
-                }
+                // Not using groupID at the moment
+                overrideMap.put( artifactID, version );
+            }
+            else
+            {
+                stdLogger.warn( "Detected bad version override property. Name: " + propertyName );
             }
         }
 
@@ -99,12 +87,6 @@ public class ExtDepMgmtVersionResolver
     public void initService( ServiceLocator locator )
     {
         super.initService( locator );
-    }
-
-    @Override
-    public DefaultVersionResolver setLogger( Logger logger )
-    {
-        return super.setLogger( logger );
     }
 
     @Override
@@ -137,19 +119,17 @@ public class ExtDepMgmtVersionResolver
             artifact = artifact.setVersion( overrideVersion );
             request.setArtifact( artifact );
 
-            System.out.printf( ">> resolveVersion has overridden  ArtifactID: %s  Version: %s  to Version: %s",
-                               artifactID, artifactVersion, overrideVersion );
-
             returnVerRes = super.resolveVersion( session, request );
+
+            stdLogger.debug( "Version of ArtifactID: " + artifactID + " was overridden from " + artifactVersion + " to "
+                + returnVerRes.getVersion() + " (" + overrideVersion + ")" );
         }
         else
         {
-            System.out.printf( ">> resolveVersion did not override  ArtifactID: %s  Version: %s", artifactID,
-                               artifactVersion );
+            // System.out.printf( ">> resolveVersion did not override  ArtifactID: %s  Version: %s", artifactID,
+            // artifactVersion );
             returnVerRes = super.resolveVersion( session, request );
         }
-
-        System.out.printf( "  Returning: %s\n", returnVerRes.getVersion() );
 
         return returnVerRes;
     }
