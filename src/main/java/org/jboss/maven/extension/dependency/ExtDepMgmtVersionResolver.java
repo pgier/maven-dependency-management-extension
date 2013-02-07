@@ -18,7 +18,7 @@ import org.sonatype.aether.resolution.VersionResult;
 import org.sonatype.aether.spi.locator.Service;
 import org.sonatype.aether.spi.locator.ServiceLocator;
 
-@Component( role = VersionResolver.class )
+//@Component( role = VersionResolver.class )
 public class ExtDepMgmtVersionResolver
     extends DefaultVersionResolver
     implements VersionResolver, Service
