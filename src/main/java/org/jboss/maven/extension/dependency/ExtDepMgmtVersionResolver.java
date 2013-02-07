@@ -48,7 +48,6 @@ public class ExtDepMgmtVersionResolver
      */
     public ExtDepMgmtVersionResolver()
     {
-        
         Map<String, String> propertyMap = SystemProperties.getPropertiesByPrepend( VERSION_PROPERTY_NAME );
 
         HashMap<String, String> overrideMap = new HashMap<String, String>();
@@ -68,8 +67,8 @@ public class ExtDepMgmtVersionResolver
                 // The value of the property is the desired version. ex: 3.0
                 String version = propertyMap.get( propertyName );
 
-                stdLogger.debug( "Detected version override property. Group: " + groupID + "  ArtifactID: " + artifactID
-                    + "  Target Version: " + version );
+                stdLogger.debug( "Detected version override property. Group: " + groupID + "  ArtifactID: "
+                    + artifactID + "  Target Version: " + version );
 
                 // Not using groupID at the moment
                 overrideMap.put( artifactID, version );
@@ -121,8 +120,8 @@ public class ExtDepMgmtVersionResolver
 
             returnVerRes = super.resolveVersion( session, request );
 
-            stdLogger.debug( "Version of ArtifactID: " + artifactID + " was overridden from " + artifactVersion + " to "
-                + returnVerRes.getVersion() + " (" + overrideVersion + ")" );
+            stdLogger.debug( "Version of ArtifactID: " + artifactID + " was overridden from " + artifactVersion
+                + " to " + returnVerRes.getVersion() + " (" + overrideVersion + ")" );
         }
         else
         {
