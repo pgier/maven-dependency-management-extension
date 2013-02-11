@@ -22,3 +22,8 @@ If you wish to remove the extension after installing it, run the following comma
 
     sudo rm -i /usr/share/maven/lib/ext/maven-dependency-management-extension*.jar
 
+## Run Integration Tests
+The following command runs the integration tests as part of the build
+
+    mvn install -Prun-its
+
