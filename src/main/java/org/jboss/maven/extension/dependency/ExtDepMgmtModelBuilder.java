@@ -131,7 +131,7 @@ public class ExtDepMgmtModelBuilder
             {
                 Map<String, String> artifactOverrideMap = groupOverrideMap.get( currGroupID );
                 String currArtifactID = dependency.getArtifactId();
-                if ( artifactOverrideMap.containsKey( currGroupID ) )
+                if ( artifactOverrideMap.containsKey( currArtifactID ) )
                 {
                     String overrideVersion = artifactOverrideMap.get( currArtifactID );
                     String currVersion = dependency.getVersion();
