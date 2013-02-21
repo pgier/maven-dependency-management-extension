@@ -7,8 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -22,6 +20,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.maven.model.Build;
 import org.apache.maven.model.Resource;
 import org.apache.maven.model.building.ModelBuildingResult;
 import org.w3c.dom.Document;
@@ -38,14 +37,20 @@ public class WriteMap
     private static final Charset CHARSET = Charset.forName( "UTF-8" );
 
     /**
+     * Directory underneath the general build target dir where the files get written
+     */
+    private static final String OUTPUT_DIR_NAME = "extdepmgmt";
+
+    /**
      * Convert the map into XML, write it out, and include it in the META-INF directory of the jar resources
      * 
      * @param result ModelBuildingResult to write and add the map file to
+     * @param fileName Name for the xml file
      * @param map Map whose keys and values are both type String
      * @throws TransformerException
      * @throws IOException
      */
-    public static void toJarResources( ModelBuildingResult result, Map<String, Map<String, String>> map )
+    public static void toJarResources( ModelBuildingResult result, String fileName, Map<String, Map<String, String>> map )
         throws TransformerException, IOException
     {
         // Don't do anything if the map has nothing in it
@@ -54,39 +59,57 @@ public class WriteMap
             return;
         }
 
+        Build build = result.getEffectiveModel().getBuild();
+
         // Test if the build directory is a path that we should work with
+        Path buildDir = null;
         try
         {
-            Path buildDir = Paths.get( result.getEffectiveModel().getBuild().getDirectory() );
+            buildDir = Paths.get( build.getDirectory() );
 
-            if ( !buildDir.isAbsolute() )
+            // The result of getBuild().getDirectory() will be absolute only once, on the first call after loading (or
+            // so it seems empirically).
+            if ( !buildDir.isAbsolute() || Files.notExists( buildDir ) )
             {
                 return;
             }
-
-            // Where to write the file
-            Path file = buildDir.resolve( "version-overrides.xml" );
-
-            // Generate XML
-            Document xml = generateXMLDocument( map );
-            DOMSource xmlSource = new DOMSource( xml );
-
-            // Write the file
-            writeXMLDocument( xmlSource, file );
-
-            // Include the file in the model resources
-            Resource resource = new Resource();
-            resource.setDirectory( buildDir.toString() );
-            resource.setTargetPath( "META-INF" );
-
-            List<String> includes = new ArrayList<String>( 1 );
-            includes.add( file.getFileName().toString() );
-            resource.setIncludes( includes );
-
-            result.getEffectiveModel().getBuild().addResource( resource );
         }
         catch ( InvalidPathException x )
         {
+            return;
+        }
+
+        // Where to write the file
+        Path outputDir = buildDir.resolve( OUTPUT_DIR_NAME );
+        Files.createDirectories( outputDir );
+        Path file = outputDir.resolve( fileName + ".xml" );
+
+        // Generate XML
+        Document xml = generateXMLDocument( map );
+        DOMSource xmlSource = new DOMSource( xml );
+
+        // Write the file
+        writeXMLDocument( xmlSource, file );
+
+        // Include the output directory in the model resources if it isn't already there.
+        boolean outputDirInResources = false;
+        for ( Resource currResource : build.getResources() )
+        {
+            if ( currResource.getDirectory() == OUTPUT_DIR_NAME )
+            {
+                outputDirInResources = true;
+                break;
+            }
+        }
+
+        if ( !outputDirInResources )
+        {
+            Resource resource = new Resource();
+            resource.setDirectory( outputDir.toString() );
+            resource.setTargetPath( "META-INF/" + OUTPUT_DIR_NAME );
+            // By default includes everything there
+
+            build.addResource( resource );
         }
     }
 
@@ -107,7 +130,7 @@ public class WriteMap
         Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty( OutputKeys.ENCODING, CHARSET.toString() );
         transformer.setOutputProperty( OutputKeys.INDENT, "yes" );
-        transformer.setOutputProperty( "{http://xml.apache.org/xslt}indent-amount", "4" );
+        transformer.setOutputProperty( "{http://xml.apache.org/xslt}indent-amount", "2" );
 
         // Actually write the file
         try (BufferedWriter writer = Files.newBufferedWriter( file, CHARSET ))
@@ -141,15 +164,17 @@ public class WriteMap
 
         // Add the entries from the map into the XML tree
         // TODO Needs to be more intelligent once final map format is known
-        Element root = doc.createElement( "overrides" );
+        Element root = doc.createElement( "override" );
         doc.appendChild( root );
 
         for ( Entry<String, Map<String, String>> groupEntry : map.entrySet() )
         {
-            Element groupElement = doc.createElement( groupEntry.getKey() );
+            Element groupElement = doc.createElement( "group" );
+            groupElement.setAttribute( "id", groupEntry.getKey() );
             for ( Entry<String, String> artifactEntry : groupEntry.getValue().entrySet() )
             {
-                Element artifactElement = doc.createElement( artifactEntry.getKey() );
+                Element artifactElement = doc.createElement( "artifact" );
+                artifactElement.setAttribute( "id", artifactEntry.getKey() );
                 artifactElement.setTextContent( artifactEntry.getValue() );
                 groupElement.appendChild( artifactElement );
             }
