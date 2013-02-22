@@ -11,6 +11,7 @@ import org.apache.maven.model.building.ModelBuildingResult;
 import org.codehaus.plexus.component.annotations.Component;
 import org.jboss.maven.extension.dependency.modelbuildingmodifier.DepVersionOverride;
 import org.jboss.maven.extension.dependency.modelbuildingmodifier.ModelBuildingModifier;
+import org.jboss.maven.extension.dependency.modelbuildingmodifier.PluginVersionOverride;
 import org.jboss.maven.extension.dependency.util.Logging;
 import org.codehaus.plexus.logging.Logger;
 
@@ -33,6 +34,7 @@ public class ExtDepMgmtModelBuilder
 
         // List is manually populated for now, though maybe reflection could be used.
         buildModifierList.add( new DepVersionOverride() );
+        buildModifierList.add( new PluginVersionOverride() );
 
         this.buildModifierList = buildModifierList;
     }
