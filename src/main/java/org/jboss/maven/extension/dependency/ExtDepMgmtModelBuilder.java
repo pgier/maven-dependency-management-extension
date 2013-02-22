@@ -12,6 +12,7 @@ import org.apache.maven.model.building.ModelBuildingResult;
 import org.codehaus.plexus.component.annotations.Component;
 import org.jboss.maven.extension.dependency.util.StdoutLogger;
 import org.jboss.maven.extension.dependency.util.SystemProperties;
+import org.jboss.maven.extension.dependency.util.VersionOverride;
 import org.codehaus.plexus.logging.Logger;
 
 @Component( role = ModelBuilder.class )
@@ -38,7 +39,7 @@ public class ExtDepMgmtModelBuilder
      * Value: Map of overrides for a groupID Inner Map Key: String of groupID Inner Map Value: String of desired
      * override version number
      */
-    private final Map<String, Map<String, String>> groupOverrideMap;
+    private final Map<String, Map<String, VersionOverride>> groupOverrideMap;
 
     /**
      * Load overrides list when the object is instantiated
@@ -47,8 +48,8 @@ public class ExtDepMgmtModelBuilder
     {
         Map<String, String> propertyMap = SystemProperties.getPropertiesByPrepend( VERSION_PROPERTY_NAME );
 
-        HashMap<String, Map<String, String>> groupOverrideMap = new HashMap<String, Map<String, String>>();
-        Map<String, String> artifactOverrideMap;
+        HashMap<String, Map<String, VersionOverride>> groupOverrideMap = new HashMap<String, Map<String, VersionOverride>>();
+        Map<String, VersionOverride> artifactOverrideMap;
 
         for ( String propertyName : propertyMap.keySet() )
         {
@@ -68,16 +69,19 @@ public class ExtDepMgmtModelBuilder
                 logger.debug( "Detected version override property. Group: " + groupID + "  ArtifactID: " + artifactID
                     + "  Target Version: " + version );
 
+                // Create VersionOverride object
+                VersionOverride versionOverride = new VersionOverride( groupID, artifactID, version );
+
                 // Insert the override into override map
                 if ( groupOverrideMap.containsKey( groupID ) )
                 {
                     artifactOverrideMap = groupOverrideMap.get( groupID );
-                    artifactOverrideMap.put( artifactID, version );
+                    artifactOverrideMap.put( artifactID, versionOverride );
                 }
                 else
                 {
-                    artifactOverrideMap = new HashMap<String, String>();
-                    artifactOverrideMap.put( artifactID, version );
+                    artifactOverrideMap = new HashMap<String, VersionOverride>();
+                    artifactOverrideMap.put( artifactID, versionOverride );
                     groupOverrideMap.put( groupID, artifactOverrideMap );
                 }
             }
@@ -129,11 +133,11 @@ public class ExtDepMgmtModelBuilder
             String currGroupID = dependency.getGroupId();
             if ( groupOverrideMap.containsKey( currGroupID ) )
             {
-                Map<String, String> artifactOverrideMap = groupOverrideMap.get( currGroupID );
+                Map<String, VersionOverride> artifactOverrideMap = groupOverrideMap.get( currGroupID );
                 String currArtifactID = dependency.getArtifactId();
                 if ( artifactOverrideMap.containsKey( currArtifactID ) )
                 {
-                    String overrideVersion = artifactOverrideMap.get( currArtifactID );
+                    String overrideVersion = artifactOverrideMap.get( currArtifactID ).getVersion();
                     String currVersion = dependency.getVersion();
                     if ( !currVersion.equals( overrideVersion ) )
                     {
@@ -146,6 +150,26 @@ public class ExtDepMgmtModelBuilder
                         logger.debug( "Version of ArtifactID " + currArtifactID
                             + " was the same as the override version (both are " + currVersion + ")" );
                     }
+                    artifactOverrideMap.get( currArtifactID ).setOverriden( true );
+                }
+            }
+        }
+
+        // Add dependencies not already in model
+        for ( String groupID : groupOverrideMap.keySet() )
+        {
+            for ( String artifactID : groupOverrideMap.get( groupID ).keySet() )
+            {
+                if ( !groupOverrideMap.get( groupID ).get( artifactID ).isOverriden() )
+                {
+                    String version = groupOverrideMap.get( groupID ).get( artifactID ).getVersion();
+                    Dependency dependency = new Dependency();
+                    dependency.setGroupId(groupID);
+                    dependency.setArtifactId(artifactID);
+                    dependency.setVersion(version);
+                    result.getEffectiveModel().addDependency(dependency);
+                    groupOverrideMap.get( groupID ).get( artifactID ).setOverriden(true);
+                    logger.debug( "New dependency added: " + groupID + ":" + artifactID + "=" + version );
                 }
             }
         }
