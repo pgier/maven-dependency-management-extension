@@ -7,10 +7,20 @@ Pass a property to the maven build in the form:
 
     version:<groupId>:<artifactId>=<version>
 
+to override a **dependency version**. Pass a property to the maven build in the form:
+
+    pluginVersion:<groupId>:<artifactId>=<version>
+
+to override a **plugin version**.
+
 ### Examples
 The following overrides **junit**  to version **4.10**
 
     mvn install -Dversion:junit:junit=4.10
+
+The following overrides **plexus-component-metadata**  to version **1.5.5**
+
+    mvn install -DpluginVersion:org.codehaus.plexus:plexus-component-metadata=1.5.5
 
 ## Install
 After cloning the repo, you can make the extension active for all maven builds by running the following commands:
