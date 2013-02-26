@@ -1,4 +1,4 @@
-package org.jboss.maven.extension.dependency.util;
+package org.jboss.maven.extension.dependency.util.log;
 
 import org.codehaus.plexus.logging.Logger;
 

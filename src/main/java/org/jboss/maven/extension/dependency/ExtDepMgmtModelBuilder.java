@@ -9,10 +9,10 @@ import org.apache.maven.model.building.ModelBuildingException;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
 import org.codehaus.plexus.component.annotations.Component;
-import org.jboss.maven.extension.dependency.modelbuildingmodifier.DepVersionOverride;
 import org.jboss.maven.extension.dependency.modelbuildingmodifier.ModelBuildingModifier;
-import org.jboss.maven.extension.dependency.modelbuildingmodifier.PluginVersionOverride;
-import org.jboss.maven.extension.dependency.util.Logging;
+import org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride.DepVersionOverride;
+import org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride.PluginVersionOverride;
+import org.jboss.maven.extension.dependency.util.log.Logging;
 import org.codehaus.plexus.logging.Logger;
 
 @Component( role = ModelBuilder.class )
