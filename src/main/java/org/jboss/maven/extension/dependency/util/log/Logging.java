@@ -18,7 +18,7 @@ public class Logging
         // First access creates the logger (on-demand)
         if ( logger == null )
         {
-            logger = new StdoutLogger();
+            logger = new StdoutLogger(Logger.LEVEL_DEBUG);
         }
         return logger;
     }

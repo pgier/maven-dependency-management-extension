@@ -18,93 +18,139 @@ public class StdoutLogger
 
     private static String FATAL_ERROR_TICKER = "[FATAL] ";
 
+    private int threshold;
+
+    public StdoutLogger()
+    {
+        this( LEVEL_DEBUG );
+    }
+
+    public StdoutLogger( int threshold )
+    {
+        setThreshold( threshold );
+    }
+
     public void debug( String message )
     {
-        System.out.println( DEBUG_TICKER + message );
+        if ( isDebugEnabled() )
+        {
+            System.out.println( DEBUG_TICKER + message );
+        }
     }
 
     public void debug( String message, Throwable throwable )
     {
-        System.out.println( DEBUG_TICKER + message );
-        throwable.printStackTrace();
+        if ( isDebugEnabled() )
+        {
+            System.out.println( DEBUG_TICKER + message );
+            throwable.printStackTrace();
+        }
     }
 
     public boolean isDebugEnabled()
     {
-        return true;
+        return threshold != LEVEL_DISABLED && threshold <= LEVEL_DEBUG;
     }
 
     public void info( String message )
     {
-        System.out.println( INFO_TICKER + message );
+        if ( isInfoEnabled() )
+        {
+            System.out.println( INFO_TICKER + message );
+        }
     }
 
     public void info( String message, Throwable throwable )
     {
-        System.out.println( INFO_TICKER + message );
-        throwable.printStackTrace();
+        if ( isInfoEnabled() )
+        {
+            System.out.println( INFO_TICKER + message );
+            throwable.printStackTrace();
+        }
     }
 
     public boolean isInfoEnabled()
     {
-        return true;
+        return threshold != LEVEL_DISABLED && threshold <= LEVEL_INFO;
     }
 
     public void warn( String message )
     {
-        System.out.println( WARN_TICKER + message );
+        if ( isWarnEnabled() )
+        {
+            System.out.println( WARN_TICKER + message );
+        }
     }
 
     public void warn( String message, Throwable throwable )
     {
-        System.out.println( WARN_TICKER + message );
-        throwable.printStackTrace();
+        if ( isWarnEnabled() )
+        {
+            System.out.println( WARN_TICKER + message );
+            throwable.printStackTrace();
+        }
     }
 
     public boolean isWarnEnabled()
     {
-        return true;
+        return threshold != LEVEL_DISABLED && threshold <= LEVEL_WARN;
     }
 
     public void error( String message )
     {
-        System.out.println( ERROR_TICKER + message );
+        if ( isErrorEnabled() )
+        {
+            System.out.println( ERROR_TICKER + message );
+        }
     }
 
     public void error( String message, Throwable throwable )
     {
-        System.out.println( ERROR_TICKER + message );
-        throwable.printStackTrace();
+        if ( isErrorEnabled() )
+        {
+            System.out.println( ERROR_TICKER + message );
+            throwable.printStackTrace();
+        }
     }
 
     public boolean isErrorEnabled()
     {
-        return true;
+        return threshold != LEVEL_DISABLED && threshold <= LEVEL_ERROR;
     }
 
     public void fatalError( String message )
     {
-        System.out.println( FATAL_ERROR_TICKER + message );
+        if ( isFatalErrorEnabled() )
+        {
+            System.out.println( FATAL_ERROR_TICKER + message );
+        }
     }
 
     public void fatalError( String message, Throwable throwable )
     {
-        System.out.println( FATAL_ERROR_TICKER + message );
-        throwable.printStackTrace();
+        if ( isFatalErrorEnabled() )
+        {
+            System.out.println( FATAL_ERROR_TICKER + message );
+            throwable.printStackTrace();
+        }
     }
 
     public boolean isFatalErrorEnabled()
     {
-        return true;
+        return threshold != LEVEL_DISABLED && threshold <= LEVEL_FATAL;
     }
 
     public int getThreshold()
     {
-        return LEVEL_DEBUG;
+        return threshold;
     }
 
     public void setThreshold( int threshold )
     {
+        if (threshold < LEVEL_DEBUG || threshold > LEVEL_DISABLED) {
+            return;
+        }
+        this.threshold = threshold;
     }
 
     public Logger getChildLogger( String name )

@@ -53,7 +53,7 @@ public abstract class VersionOverrider
                 // The value of the property is the desired version. ex: 3.0
                 String version = propertyMap.get( propertyName );
 
-                logger.debug( "Detected " + description + " version override property. GroupID: " + groupID
+                logger.info( "Detected " + description + " version override property. GroupID: " + groupID
                     + "  ArtifactID: " + artifactID + "  Target Version: " + version );
 
                 // Create VersionOverride object
@@ -117,8 +117,8 @@ public abstract class VersionOverrider
                 }
                 else
                 {
-                    // logger.debug( desc + " version of ArtifactID " + currArtifactID
-                    // + " was the same as the override version (both are " + currVersion + ")" );
+                    logger.debug( desc + " version of ArtifactID " + currArtifactID
+                        + " was the same as the override version (both are " + currVersion + ")" );
                 }
                 artifactOverrideMap.get( currArtifactID ).setOverriden( true );
             }
