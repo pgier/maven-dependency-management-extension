@@ -3,6 +3,7 @@ package org.jboss.maven.extension.dependency.metainf;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -22,15 +23,19 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Resource;
-import org.apache.maven.model.building.ModelBuildingResult;
+import org.codehaus.plexus.logging.Logger;
+import org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride.VersionOverrideInfo;
+import org.jboss.maven.extension.dependency.util.log.Logging;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * Class containing static methods that deal with converting in-memory override maps to another form
+ * Converts in-memory override maps to a persistent form
  */
-public class WriteMap
+public class OverrideMapWriter
 {
+    private static final Logger logger = Logging.getLogger();
+
     /**
      * Charset for writing text files
      */
@@ -41,76 +46,114 @@ public class WriteMap
      */
     private static final String OUTPUT_DIR_NAME = "extdepmgmt";
 
+    private final String fileName;
+
+    private final Map<String, Map<String, VersionOverrideInfo>> overrideMap;
+
     /**
-     * Convert the map into XML, write it out, and include it in the META-INF directory of the jar resources
-     * 
-     * @param result ModelBuildingResult to write and add the map file to
+     * Ignore write requests when this flag is true
+     */
+    private boolean mapWritten;
+
+    /**
+     * Clear the location where the file would have been written on write requests if this is true
+     */
+    private final boolean clearMapOnDisk;
+
+    /**
      * @param fileName Name for the xml file
-     * @param map Map whose keys and values are both type String
+     * @param map The override map to use
+     */
+    public OverrideMapWriter( String fileName, Map<String, Map<String, VersionOverrideInfo>> map )
+    {
+        this.fileName = fileName;
+        this.overrideMap = map;
+
+        mapWritten = false;
+
+        if ( map.size() <= 0 )
+        {
+            clearMapOnDisk = true;
+        }
+        else
+        {
+            clearMapOnDisk = false;
+        }
+
+        logger.debug( "OverrideMapWriter made for " + fileName );
+    }
+
+    /**
+     * Convert the map into XML, write it out, and include it in the META-INF directory of the jar resources of build.
+     * 
+     * @param build The Build to write to and add the written map file to
      * @throws TransformerException
      * @throws IOException
+     * @throws InvalidPathException
      */
-    public static void toJarResources( ModelBuildingResult result, String fileName, Map<String, Map<String, String>> map )
-        throws TransformerException, IOException
+    public void writeXMLTo( Build build )
+        throws TransformerException, IOException, InvalidPathException
     {
-        // Don't do anything if the map has nothing in it
-        if ( map == null || map.size() <= 0 )
-        {
-            return;
-        }
-
-        Build build = result.getEffectiveModel().getBuild();
-
-        // Test if the build directory is a path that we should work with
-        Path buildDir = null;
-        try
-        {
-            buildDir = Paths.get( build.getDirectory() );
-
-            // The result of getBuild().getDirectory() will be absolute only once, on the first call after loading (or
-            // so it seems empirically).
-            if ( !buildDir.isAbsolute() || Files.notExists( buildDir ) )
-            {
-                return;
-            }
-        }
-        catch ( InvalidPathException x )
+        if ( mapWritten )
         {
             return;
         }
 
         // Where to write the file
-        Path outputDir = buildDir.resolve( OUTPUT_DIR_NAME );
-        Files.createDirectories( outputDir );
-        Path file = outputDir.resolve( fileName + ".xml" );
+        Path buildDir = Paths.get( build.getDirectory() );
+        Path outputDir = buildDir.resolve( "classes/META-INF/" + OUTPUT_DIR_NAME );
+        Path file = outputDir.resolve( fileName + "-version.xml" );
 
-        // Generate XML
-        Document xml = generateXMLDocument( map );
-        DOMSource xmlSource = new DOMSource( xml );
-
-        // Write the file
-        writeXMLDocument( xmlSource, file );
-
-        // Include the output directory in the model resources if it isn't already there.
-        boolean outputDirInResources = false;
-        for ( Resource currResource : build.getResources() )
+        if ( clearMapOnDisk )
         {
-            if ( currResource.getDirectory() == OUTPUT_DIR_NAME )
+            Files.deleteIfExists( file );
+            try
             {
-                outputDirInResources = true;
-                break;
+                Files.deleteIfExists( outputDir );
             }
-        }
+            catch ( DirectoryNotEmptyException e )
+            {
+            }
 
-        if ( !outputDirInResources )
+            logger.debug( "Cleared map at path " + file );
+        }
+        else
         {
-            Resource resource = new Resource();
-            resource.setDirectory( outputDir.toString() );
-            resource.setTargetPath( "META-INF/" + OUTPUT_DIR_NAME );
-            // By default includes everything there
+            // Create directories if needed
+            Files.createDirectories( outputDir );
 
-            build.addResource( resource );
+            // Generate XML
+            Document xml = generateXMLDocument( overrideMap );
+            DOMSource xmlSource = new DOMSource( xml );
+
+            // Write the file
+            writeXMLDocument( xmlSource, file );
+
+            // Include the output directory in the model resources if it isn't already there.
+            boolean outputDirInResources = false;
+            for ( Resource currResource : build.getResources() )
+            {
+                if ( currResource.getDirectory() == OUTPUT_DIR_NAME )
+                {
+                    outputDirInResources = true;
+                    break;
+                }
+            }
+
+            if ( !outputDirInResources )
+            {
+                Resource resource = new Resource();
+                resource.setDirectory( outputDir.toString() );
+                resource.setTargetPath( "META-INF/" + OUTPUT_DIR_NAME );
+                // By default includes everything there
+
+                build.addResource( resource );
+            }
+
+            logger.debug( "Wrote map at path " + file );
         }
+
+        mapWritten = true;
     }
 
     /**
@@ -146,7 +189,7 @@ public class WriteMap
      * @param map The Map to source entries from
      * @return The generated XML Document
      */
-    private static Document generateXMLDocument( Map<String, Map<String, String>> map )
+    private static Document generateXMLDocument( Map<String, Map<String, VersionOverrideInfo>> map )
     {
         // Get a Document in a long-winded manner
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -163,19 +206,22 @@ public class WriteMap
         Document doc = builder.newDocument();
 
         // Add the entries from the map into the XML tree
-        // TODO Needs to be more intelligent once final map format is known
         Element root = doc.createElement( "override" );
         doc.appendChild( root );
 
-        for ( Entry<String, Map<String, String>> groupEntry : map.entrySet() )
+        for ( Entry<String, Map<String, VersionOverrideInfo>> groupEntry : map.entrySet() )
         {
             Element groupElement = doc.createElement( "group" );
             groupElement.setAttribute( "id", groupEntry.getKey() );
-            for ( Entry<String, String> artifactEntry : groupEntry.getValue().entrySet() )
+            for ( Entry<String, VersionOverrideInfo> artifactEntry : groupEntry.getValue().entrySet() )
             {
                 Element artifactElement = doc.createElement( "artifact" );
                 artifactElement.setAttribute( "id", artifactEntry.getKey() );
-                artifactElement.setTextContent( artifactEntry.getValue() );
+
+                Element valueElement = doc.createElement( "version" );
+                valueElement.setTextContent( artifactEntry.getValue().getVersion() );
+
+                artifactElement.appendChild( valueElement );
                 groupElement.appendChild( artifactElement );
             }
             root.appendChild( groupElement );

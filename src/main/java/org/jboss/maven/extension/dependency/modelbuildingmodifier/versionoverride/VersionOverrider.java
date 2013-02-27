@@ -29,7 +29,8 @@ public abstract class VersionOverrider
      * @param description A short name describing the type of override
      * @return The override data as a two layer nested Map, semantically: <groupID, <artifactID, VersionOverride>>
      */
-    protected Map<String, Map<String, VersionOverrideInfo>> getOverrideMap( String propertyNamePrepend, String description )
+    protected Map<String, Map<String, VersionOverrideInfo>> getOverrideMap( String propertyNamePrepend,
+                                                                            String description )
     {
         Map<String, String> propertyMap = SystemProperties.getPropertiesByPrepend( propertyNamePrepend );
 
@@ -96,8 +97,8 @@ public abstract class VersionOverrider
      * @see OverrideTarget
      */
     protected ModelBuildingResult applyVersionToTargetInModel( ModelBuildingResult result,
-                                                             Map<String, Map<String, VersionOverrideInfo>> overrideMap,
-                                                             OverrideTarget target, String desc )
+                                                               Map<String, Map<String, VersionOverrideInfo>> overrideMap,
+                                                               OverrideTarget target, String desc )
     {
         String currGroupID = target.getGroupId();
         if ( overrideMap.containsKey( currGroupID ) )
@@ -111,13 +112,13 @@ public abstract class VersionOverrider
                 if ( !currVersion.equals( overrideVersion ) )
                 {
                     target.setVersion( overrideVersion );
-                    logger.debug( desc + " version of ArtifactID " + currArtifactID + " was overridden from " + currVersion
-                        + " to " + target.getVersion() + " (" + overrideVersion + ")" );
+                    logger.debug( desc + " version of ArtifactID " + currArtifactID + " was overridden from "
+                        + currVersion + " to " + target.getVersion() + " (" + overrideVersion + ")" );
                 }
                 else
                 {
-                    //logger.debug( desc + " version of ArtifactID " + currArtifactID
-                    //    + " was the same as the override version (both are " + currVersion + ")" );
+                    // logger.debug( desc + " version of ArtifactID " + currArtifactID
+                    // + " was the same as the override version (both are " + currVersion + ")" );
                 }
                 artifactOverrideMap.get( currArtifactID ).setOverriden( true );
             }
