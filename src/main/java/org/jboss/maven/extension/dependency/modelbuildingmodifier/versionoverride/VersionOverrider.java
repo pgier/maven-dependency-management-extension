@@ -90,10 +90,10 @@ public abstract class VersionOverrider
      * Apply version override to the current target if applicable.
      * 
      * @param result The model to override versions in
-     * @param overrideMap The Map of overrides to apply\
+     * @param overrideMap The Map of overrides to apply
      * @param target The OverrideTarget to use
      * @param desc A short name describing the type of override
-     * @return The modified model.
+     * @return The modified model
      * @see OverrideTarget
      */
     protected ModelBuildingResult applyVersionToTargetInModel( ModelBuildingResult result,
