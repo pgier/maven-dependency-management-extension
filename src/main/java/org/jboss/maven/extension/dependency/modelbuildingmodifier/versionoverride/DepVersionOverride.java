@@ -1,7 +1,6 @@
 package org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride;
 
 import java.io.IOException;
-import java.nio.file.InvalidPathException;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -58,14 +57,17 @@ public class DepVersionOverride
         writeMapXML = new OverrideMapWriter( OVERRIDE_NAME, groupOverrideMap );
     }
 
-    @Override
     public ModelBuildingResult modifyBuild( ModelBuildingRequest request, ModelBuildingResult result )
     {
         try
         {
             writeMapXML.writeXMLTo( result.getEffectiveModel().getBuild() );
         }
-        catch ( InvalidPathException | TransformerException | IOException e )
+        catch ( TransformerException e )
+        {
+            logger.error( "Could not write " + OVERRIDE_NAME + " override map to XML file: " + e.toString() );
+        }
+        catch ( IOException e )
         {
             logger.error( "Could not write " + OVERRIDE_NAME + " override map to XML file: " + e.toString() );
         }

@@ -1,13 +1,8 @@
 package org.jboss.maven.extension.dependency.metainf;
 
-import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.DirectoryNotEmptyException;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -35,11 +30,6 @@ import org.w3c.dom.Element;
 public class OverrideMapWriter
 {
     private static final Logger logger = Logging.getLogger();
-
-    /**
-     * Charset for writing text files
-     */
-    private static final Charset CHARSET = Charset.forName( "UTF-8" );
 
     /**
      * Directory underneath the general build target dir where the files get written
@@ -79,8 +69,6 @@ public class OverrideMapWriter
         {
             clearMapOnDisk = false;
         }
-
-        logger.debug( "OverrideMapWriter made for " + fileName );
     }
 
     /**
@@ -92,7 +80,7 @@ public class OverrideMapWriter
      * @throws InvalidPathException
      */
     public void writeXMLTo( Build build )
-        throws TransformerException, IOException, InvalidPathException
+        throws TransformerException, IOException
     {
         if ( mapWritten )
         {
@@ -100,27 +88,24 @@ public class OverrideMapWriter
         }
 
         // Where to write the file
-        Path buildDir = Paths.get( build.getDirectory() );
-        Path outputDir = buildDir.resolve( "classes/META-INF/" + OUTPUT_DIR_NAME );
-        Path file = outputDir.resolve( fileName + "-version.xml" );
+        File buildDir = new File( build.getDirectory() );
+        File outputDir = new File( buildDir.getPath() + "/classes/META-INF/" + OUTPUT_DIR_NAME );
+        File file = new File( outputDir.getPath() + "/" + fileName + "-version.xml" );
 
         if ( clearMapOnDisk )
         {
-            Files.deleteIfExists( file );
-            try
-            {
-                Files.deleteIfExists( outputDir );
-            }
-            catch ( DirectoryNotEmptyException e )
-            {
-            }
+            boolean fileWasDeleted = file.delete();
+            outputDir.delete();
 
-            logger.debug( "Cleared map at path " + file );
+            if ( fileWasDeleted )
+            {
+                logger.debug( "Cleared map at path " + file );
+            }
         }
         else
         {
             // Create directories if needed
-            Files.createDirectories( outputDir );
+            outputDir.mkdirs();
 
             // Generate XML
             Document xml = generateXMLDocument( overrideMap );
@@ -165,21 +150,29 @@ public class OverrideMapWriter
      * @throws TransformerException When it is not possible to create a Transformer instance, or if an unrecoverable
      *             error occurs during the course of the transformation.
      */
-    private static void writeXMLDocument( DOMSource xmlSource, Path file )
+    private static void writeXMLDocument( DOMSource xmlSource, File file )
         throws IOException, TransformerException
     {
         // Get a Transformer in a long-winded manner
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
-        transformer.setOutputProperty( OutputKeys.ENCODING, CHARSET.toString() );
         transformer.setOutputProperty( OutputKeys.INDENT, "yes" );
         transformer.setOutputProperty( "{http://xml.apache.org/xslt}indent-amount", "2" );
 
         // Actually write the file
-        try (BufferedWriter writer = Files.newBufferedWriter( file, CHARSET ))
+        FileWriter writer = null;
+        try
         {
+            writer = new FileWriter( file );
             StreamResult output = new StreamResult( writer );
             transformer.transform( xmlSource, output );
+        }
+        finally
+        {
+            if ( writer != null )
+            {
+                writer.close();
+            }
         }
     }
 
