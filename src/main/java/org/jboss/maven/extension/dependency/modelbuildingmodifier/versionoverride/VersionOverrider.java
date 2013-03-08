@@ -109,7 +109,7 @@ public abstract class VersionOverrider
             {
                 String overrideVersion = artifactOverrideMap.get( currArtifactID ).getVersion();
                 String currVersion = target.getVersion();
-                if ( !currVersion.equals( overrideVersion ) )
+                if ( currVersion == null || !currVersion.equals( overrideVersion ) )
                 {
                     target.setVersion( overrideVersion );
                     logger.debug( desc + " version of ArtifactID " + currArtifactID + " was overridden from "
