@@ -45,10 +45,15 @@ public class ExtDepMgmtModelBuilder
     {
         ModelBuildingResult buildResult = super.build( request );
 
-        // Run the modifiers against the built model
-        for ( ModelBuildingModifier currModifier : buildModifierList )
+        // If the pom file is not null, then this model is for the current project, 
+        // otherwise it's a repo pom and should be ignored
+        if ( request.getPomFile() != null )
         {
-            buildResult = currModifier.modifyBuild( request, buildResult );
+            // Run the modifiers against the built model
+            for ( ModelBuildingModifier currModifier : buildModifierList )
+            {
+                buildResult = currModifier.modifyBuild( request, buildResult );
+            }
         }
 
         return buildResult;
@@ -60,10 +65,15 @@ public class ExtDepMgmtModelBuilder
     {
         ModelBuildingResult buildResult = super.build( request, result );
 
-        // Run the modifiers against the built model
-        for ( ModelBuildingModifier currModifier : buildModifierList )
+        // If the pom file is not null, then this model is for the current project, 
+        // otherwise it's a repo pom and should be ignored
+        if ( request.getPomFile() != null )
         {
-            buildResult = currModifier.modifyBuild( request, buildResult );
+            // Run the modifiers against the built model
+            for ( ModelBuildingModifier currModifier : buildModifierList )
+            {
+                buildResult = currModifier.modifyBuild( request, buildResult );
+            }
         }
 
         return buildResult;
