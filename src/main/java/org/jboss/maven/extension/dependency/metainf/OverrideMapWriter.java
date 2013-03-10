@@ -3,6 +3,7 @@ package org.jboss.maven.extension.dependency.metainf;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -32,6 +33,11 @@ public class OverrideMapWriter
     private static final Logger logger = Logging.getLogger();
 
     /**
+     * The String separates parts of a Property name
+     */
+    protected static final String PROPERTY_NAME_SEPERATOR = ":";
+
+    /**
      * Directory underneath the general build target dir where the files get written
      */
     private static final String OUTPUT_DIR_NAME = "extdepmgmt";
@@ -54,10 +60,10 @@ public class OverrideMapWriter
      * @param fileName Name for the xml file
      * @param map The override map to use
      */
-    public OverrideMapWriter( String fileName, Map<String, Map<String, VersionOverrideInfo>> map )
+    public OverrideMapWriter( String fileName, Map<String, String> map )
     {
         this.fileName = fileName;
-        this.overrideMap = map;
+        this.overrideMap = getOverrideMap( map );
 
         mapWritten = false;
 
@@ -69,6 +75,68 @@ public class OverrideMapWriter
         {
             clearMapOnDisk = false;
         }
+    }
+
+    /**
+     * Get a Map representing the overrides present in the system properties that are flagged with propertyNamePrepend
+     * 
+     * @param propertyNamePrepend A String ending in PROPERTY_NAME_SEPERATOR
+     * @param description A short name describing the type of override
+     * @return The override data as a two layer nested Map, semantically: <groupID, <artifactID, VersionOverride>>
+     */
+    protected Map<String, Map<String, VersionOverrideInfo>> getOverrideMap( Map<String, String> versionProperties )
+    {
+
+        HashMap<String, Map<String, VersionOverrideInfo>> groupOverrideMap =
+            new HashMap<String, Map<String, VersionOverrideInfo>>();
+        Map<String, VersionOverrideInfo> artifactOverrideMap;
+
+        for ( String propertyName : versionProperties.keySet() )
+        {
+            // Split the name portion into parts (ex: junit:junit to {junit, junit})
+            String[] propertyNameParts = propertyName.split( PROPERTY_NAME_SEPERATOR );
+
+            if ( propertyNameParts.length == 2 )
+            {
+                // Part 1 is the group name. ex: org.apache.maven.plugins
+                String groupID = propertyNameParts[0];
+                // Part 2 is the artifact ID. ex: maven-compiler-plugin
+                String artifactID = propertyNameParts[1];
+
+                // The value of the property is the desired version. ex: 3.0
+                String version = versionProperties.get( propertyName );
+
+                logger.info( "Detected version override property. GroupID: " + groupID + "  ArtifactID: " + artifactID +
+                    "  Target Version: " + version );
+
+                // Create VersionOverride object
+                VersionOverrideInfo versionOverride = new VersionOverrideInfo( groupID, artifactID, version );
+
+                // Insert the override into override map
+                if ( groupOverrideMap.containsKey( groupID ) )
+                {
+                    artifactOverrideMap = groupOverrideMap.get( groupID );
+                    artifactOverrideMap.put( artifactID, versionOverride );
+                }
+                else
+                {
+                    artifactOverrideMap = new HashMap<String, VersionOverrideInfo>();
+                    artifactOverrideMap.put( artifactID, versionOverride );
+                    groupOverrideMap.put( groupID, artifactOverrideMap );
+                }
+            }
+            else
+            {
+                logger.error( "Detected bad version override property. Name: " + propertyName );
+            }
+        }
+
+        if ( groupOverrideMap.size() == 0 )
+        {
+            logger.debug( "No version overrides." );
+        }
+
+        return groupOverrideMap;
     }
 
     /**

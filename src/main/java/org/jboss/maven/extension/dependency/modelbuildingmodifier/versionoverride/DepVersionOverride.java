@@ -1,164 +1,105 @@
 package org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride;
 
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.xml.transform.TransformerException;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
-import org.codehaus.plexus.logging.Logger;
-import org.jboss.maven.extension.dependency.metainf.OverrideMapWriter;
-import org.jboss.maven.extension.dependency.modelbuildingmodifier.ModelBuildingModifier;
-import org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride.target.DependencyWrapper;
-import org.jboss.maven.extension.dependency.util.log.Logging;
 
 /**
  * Overrides dependency versions in a model
  */
 public class DepVersionOverride
-    extends VersionOverrider
-    implements ModelBuildingModifier
+    extends AbstractVersionOverride
 {
-    private static final Logger logger = Logging.getLogger();
-
     /**
      * A short description of the thing being overridden
      */
     private static final String OVERRIDE_NAME = "dependency";
 
     /**
-     * The String that needs to be prepended a system property to make it a version override. <br />
-     * ex: -Dversion:junit:junit=4.10
-     */
-    private static final String PROPERTY_PREPEND = "version" + PROPERTY_NAME_SEPERATOR;
-
-    /**
-     * Key: String of artifactID <br />
-     * Value: Map of overrides for a groupID Inner Map Key: String of groupID Inner Map Value: String of desired
-     * override version number
-     */
-    private final Map<String, Map<String, VersionOverrideInfo>> groupOverrideMap;
-
-    /**
-     * Handles writing the override map to the jar resources when needed
-     */
-    private OverrideMapWriter writeMapXML;
-
-    /**
      * Load dependency overrides list when the object is instantiated
      */
-    public DepVersionOverride()
+    public DepVersionOverride( Map<String, String> versionOverrides )
     {
-        groupOverrideMap = getOverrideMap( PROPERTY_PREPEND, OVERRIDE_NAME );
-        writeMapXML = new OverrideMapWriter( OVERRIDE_NAME, groupOverrideMap );
+        this.setVersionOverrides( versionOverrides );
     }
 
-    public ModelBuildingResult modifyBuild( ModelBuildingRequest request, ModelBuildingResult result )
+    public ModelBuildingResult updateModel( ModelBuildingRequest request, ModelBuildingResult result )
     {
-        try
+
+        // If the model doesn't have any Dependency Management set by default, create one for it
+        DependencyManagement dependencyManagement = result.getEffectiveModel().getDependencyManagement();
+        if ( dependencyManagement == null )
         {
-            writeMapXML.writeXMLTo( result.getEffectiveModel().getBuild() );
-        }
-        catch ( TransformerException e )
-        {
-            logger.error( "Could not write " + OVERRIDE_NAME + " override map to XML file: " + e.toString() );
-        }
-        catch ( IOException e )
-        {
-            logger.error( "Could not write " + OVERRIDE_NAME + " override map to XML file: " + e.toString() );
+            dependencyManagement = new DependencyManagement();
+            result.getEffectiveModel().setDependencyManagement( dependencyManagement );
+            getLog().debug( "Created new Dependency Management for model" );
         }
 
-        // Main dependencies
-        for ( Dependency dependency : result.getEffectiveModel().getDependencies() )
+        // Apply matching overrides to dependency management
+        List<Dependency> dependencies = dependencyManagement.getDependencies();
+        Map<String, String> nonMatchingVersionOverrides =
+            this.applyOverrides( dependencies, this.getVersionOverrides() );
+
+        // Add dependencies which did not match previously
+        for ( String groupIdArtifactId : nonMatchingVersionOverrides.keySet() )
         {
-            DependencyWrapper dependencyWrapped = new DependencyWrapper( dependency );
-            result = applyVersionToTargetInModel( result, groupOverrideMap, dependencyWrapped, OVERRIDE_NAME );
+            String[] groupIdArtifactIdParts = groupIdArtifactId.split( ":" );
+            Dependency dependency = new Dependency();
+            dependency.setGroupId( groupIdArtifactIdParts[0] );
+            dependency.setArtifactId( groupIdArtifactIdParts[1] );
+            String artifactVersion = nonMatchingVersionOverrides.get( groupIdArtifactId );
+            dependency.setVersion( artifactVersion );
+            dependencyManagement.getDependencies().add( dependency );
+            getLog().debug( "New dependency added to Dependency Management: " + groupIdArtifactId + "=" +
+                                artifactVersion );
         }
 
-        // Transitive dependencies
-        result = addDependencyManagementForUnusedOverrides( result, groupOverrideMap );
+        // Apply overides to project dependencies
+        List<Dependency> projectDependencies = result.getEffectiveModel().getDependencies();
+        this.applyOverrides( projectDependencies, getVersionOverrides() );
 
         return result;
     }
 
     /**
-     * For all overrides in the overrideMap, if they haven't been used, add them as dependencies in the model's
-     * DependencyManagement, to allow them to affect Transitive Dependencies.
+     * Apply a set of version overrides to a list of dependencies. Return a list of the overrides which were not
+     * applied.
      * 
-     * @param result The model to modify
-     * @param overrideMap The Map of overrides to that may or may not have been used previously
-     * @return The modified model
+     * @param dependencies The list of dependencies
+     * @param overrides The map of dependency version overrides
+     * @return The map of overrides that were not matched in the dependencies
      */
-    private static ModelBuildingResult addDependencyManagementForUnusedOverrides( ModelBuildingResult result,
-                                                                                  Map<String, Map<String, VersionOverrideInfo>> overrideMap )
+    public Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides )
     {
-        // TODO: Explore de-duplication of code between this method and addPluginManagementForUnusedOverrides
+        // Apply matching overrides to dependency management
+        Map<String, String> nonMatchingVersionOverrides = new HashMap<String, String>();
+        nonMatchingVersionOverrides.putAll( overrides );
 
-        for ( Entry<String, Map<String, VersionOverrideInfo>> groupEntry : overrideMap.entrySet() )
+        for ( Dependency dependency : dependencies )
         {
-            String groupID = groupEntry.getKey();
-            Map<String, VersionOverrideInfo> artifactMap = groupEntry.getValue();
-
-            for ( Entry<String, VersionOverrideInfo> artifactEntry : artifactMap.entrySet() )
+            String groupIdArtifactId = dependency.getGroupId() + GAV_SEPERATOR + dependency.getArtifactId();
+            if ( overrides.containsKey( groupIdArtifactId ) )
             {
-                String artifactID = artifactEntry.getKey();
-                VersionOverrideInfo artifactVersionOverrideInfo = artifactEntry.getValue();
-
-                // Was the override used?
-                if ( !artifactVersionOverrideInfo.isOverriden() )
-                {
-                    String artifactVersion = artifactVersionOverrideInfo.getVersion();
-
-                    // https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies
-                    // DependencyManagement entries target possible future dependencies (Transitive Dependencies).
-
-                    // If the model doesn't have any Dependency Management set by default, create one for it
-                    DependencyManagement dependencyManagement = result.getEffectiveModel().getDependencyManagement();
-                    if ( dependencyManagement == null )
-                    {
-                        dependencyManagement = new DependencyManagement();
-                        result.getEffectiveModel().setDependencyManagement( dependencyManagement );
-                        logger.debug( "Created new Dependency Management for model" );
-                    }
-
-                    // Just alter the version of the existing Dependency Management entry if one exists already for the
-                    // groupID and artifactID
-                    boolean existsAlready = false;
-                    for ( Dependency currDependency : dependencyManagement.getDependencies() )
-                    {
-                        if ( groupID == currDependency.getGroupId() && artifactID == currDependency.getArtifactId() )
-                        {
-                            currDependency.setVersion( artifactVersion );
-
-                            logger.debug( "Altered existing dependency in Dependency Management: " + groupID + ":"
-                                + artifactID + "=" + artifactVersion );
-                            existsAlready = true;
-                            break;
-                        }
-                    }
-
-                    // No existing entry to alter, so make and add a new one
-                    if ( !existsAlready )
-                    {
-                        Dependency newDependency = new Dependency();
-                        newDependency.setGroupId( groupID );
-                        newDependency.setArtifactId( artifactID );
-                        newDependency.setVersion( artifactVersion );
-                        dependencyManagement.addDependency( newDependency );
-
-                        logger.debug( "New dependency added to Dependency Management: " + groupID + ":" + artifactID
-                            + "=" + artifactVersion );
-                    }
-
-                    artifactVersionOverrideInfo.setOverriden( true );
-                }
+                String artifactVersion = overrides.get( groupIdArtifactId );
+                dependency.setVersion( artifactVersion );
+                getLog().debug( "Altered existing dependency in Dependency Management: " + groupIdArtifactId + "=" +
+                                    artifactVersion );
+                nonMatchingVersionOverrides.remove( groupIdArtifactId );
             }
         }
 
-        return result;
+        return nonMatchingVersionOverrides;
     }
+
+    @Override
+    public String getName()
+    {
+        return OVERRIDE_NAME;
+    }
+
 }

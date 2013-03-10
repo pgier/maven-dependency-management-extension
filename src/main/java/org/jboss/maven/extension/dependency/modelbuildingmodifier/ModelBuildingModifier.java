@@ -15,5 +15,12 @@ public interface ModelBuildingModifier
      * @param result the ModelBuildingResult to be modified
      * @return the modified ModelBuildingResult result
      */
-    public ModelBuildingResult modifyBuild( ModelBuildingRequest request, ModelBuildingResult result );
+    public ModelBuildingResult updateModel( ModelBuildingRequest request, ModelBuildingResult result );
+
+    /**
+     * Get simple name of this modifier
+     * 
+     * @return Simple name of this modifier
+     */
+    public String getName();
 }
