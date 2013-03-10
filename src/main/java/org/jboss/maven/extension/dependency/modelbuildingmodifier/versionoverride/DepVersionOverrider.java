@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.xml.transform.TransformerException;
 
@@ -12,7 +13,10 @@ import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
 import org.jboss.maven.extension.dependency.metainf.OverrideMapWriter;
+import org.jboss.maven.extension.dependency.resolver.ArtifactDescriptorResolver;
 import org.jboss.maven.extension.dependency.util.VersionPropertyReader;
+import org.sonatype.aether.resolution.ArtifactDescriptorException;
+import org.sonatype.aether.resolution.ArtifactResolutionException;
 
 /**
  * Overrides dependency versions in a model
@@ -27,11 +31,20 @@ public class DepVersionOverrider
     private static final String DEPENDENCY_VERSION_OVERRIDE_PREFIX = "version:";
 
     /**
+     * The name of the property which contains the GAV of the remote pom from which to retrieve dependency management
+     * information. <br />
+     * ex: -DdependencyManagement:org.foo:bar-dep-mgmt:1.0
+     */
+    private static final String DEPENDENCY_MANAGEMENT_POM_PROPERTY = "dependencyManagement";
+
+    /**
      * A short description of the thing being overridden
      */
     private static final String OVERRIDE_NAME = "dependency";
 
-    Map<String, String> depVersionOverrides;
+    private Map<String, String> dependencyVersionOverrides;
+
+    private static ArtifactDescriptorResolver dependencyResolver;
 
     /**
      * Default constructor
@@ -60,7 +73,7 @@ public class DepVersionOverrider
 
         // Apply matching overrides to dependency management
         List<Dependency> dependencies = dependencyManagement.getDependencies();
-        Map<String, String> nonMatchingVersionOverrides = this.applyOverrides( dependencies, versionOverrides );
+        Map<String, String> nonMatchingVersionOverrides = applyOverrides( dependencies, versionOverrides );
 
         // Add dependencies which did not match previously
         for ( String groupIdArtifactId : nonMatchingVersionOverrides.keySet() )
@@ -78,7 +91,7 @@ public class DepVersionOverrider
 
         // Apply overides to project dependencies
         List<Dependency> projectDependencies = result.getEffectiveModel().getDependencies();
-        this.applyOverrides( projectDependencies, versionOverrides );
+        applyOverrides( projectDependencies, versionOverrides );
 
         writeXmlMap( result, getName(), versionOverrides );
 
@@ -121,15 +134,56 @@ public class DepVersionOverrider
         return OVERRIDE_NAME;
     }
 
-    @Override
     public Map<String, String> getVersionOverrides()
     {
-        if ( depVersionOverrides == null )
+        if ( dependencyVersionOverrides == null )
         {
-            depVersionOverrides =
+            dependencyVersionOverrides = new HashMap<String, String>();
+
+            Map<String, String> remoteDepOverrides = loadRemoteDepVersionOverrides();
+            dependencyVersionOverrides.putAll( remoteDepOverrides );
+
+            Map<String, String> propDepOverrides =
                 VersionPropertyReader.getVersionPropertiesByPrepend( DEPENDENCY_VERSION_OVERRIDE_PREFIX );
+            dependencyVersionOverrides.putAll( propDepOverrides );
         }
-        return depVersionOverrides;
+        return dependencyVersionOverrides;
+    }
+
+    private Map<String, String> loadRemoteDepVersionOverrides()
+    {
+        Properties systemProperties = System.getProperties();
+        String depMgmtPomGAV = systemProperties.getProperty( DEPENDENCY_MANAGEMENT_POM_PROPERTY );
+
+        Map<String, String> versionOverrides = new HashMap<String, String>( 0 );
+
+        if ( depMgmtPomGAV != null )
+        {
+            try
+            {
+                versionOverrides = getMavenDepResolver().getRemoteVersionOverrides( depMgmtPomGAV );
+            }
+            catch ( ArtifactResolutionException e )
+            {
+                getLog().warn( "Unable to resolve remote pom: " + e );
+            }
+            catch ( ArtifactDescriptorException e )
+            {
+                getLog().warn( "Unable to resolve remote pom: " + e );
+            }
+
+        }
+
+        return versionOverrides;
+    }
+
+    private static ArtifactDescriptorResolver getMavenDepResolver()
+    {
+        if ( dependencyResolver == null )
+        {
+            dependencyResolver = new ArtifactDescriptorResolver();
+        }
+        return dependencyResolver;
     }
 
     private void writeXmlMap( ModelBuildingResult result, String overrideName, Map<String, String> overrides )
@@ -147,7 +201,6 @@ public class DepVersionOverrider
         {
             getLog().error( "Could not write " + overrideName + " override map to XML file: " + e.toString() );
         }
-
     }
 
 }

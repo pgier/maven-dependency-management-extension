@@ -1,6 +1,7 @@
 package org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,13 @@ public class PluginVersionOverrider
      * ex: -DpluginVersion:foo:maven-bar-plugin=1.0
      */
     private static final String PLUGIN_VERSION_OVERRIDE_PREFIX = "pluginVersion:";
+
+    /**
+     * The name of the property which contains the GAV of the remote pom from which to retrieve plugin management
+     * information. <br />
+     * ex: -DpluginManagement:org.foo:bar-plugin-mgmt:1.0
+     */
+    private static final String PLUGIN_MANAGEMENT_POM_PROPERTY = "pluginManagement";
 
     private Map<String, String> pluginVersionOverrides;
 
@@ -97,13 +105,17 @@ public class PluginVersionOverrider
         return OVERRIDE_NAME;
     }
 
-    @Override
     public Map<String, String> getVersionOverrides()
     {
         if ( pluginVersionOverrides == null )
         {
-            pluginVersionOverrides =
+            pluginVersionOverrides = new HashMap<String, String>();
+
+            // TODO: load remote plugin management
+
+            Map<String, String> propPluginOverrides =
                 VersionPropertyReader.getVersionPropertiesByPrepend( PLUGIN_VERSION_OVERRIDE_PREFIX );
+            pluginVersionOverrides.putAll( propPluginOverrides );
         }
         return pluginVersionOverrides;
     }
@@ -123,7 +135,6 @@ public class PluginVersionOverrider
         {
             getLog().error( "Could not write " + overrideName + " override map to XML file: " + e.toString() );
         }
-
     }
 
 }
