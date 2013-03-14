@@ -12,7 +12,6 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.logging.Logger;
 import org.jboss.maven.extension.dependency.metainf.effectivepom.EffectivePomWriter;
-import org.jboss.maven.extension.dependency.modelmodifier.ModelCompare;
 import org.jboss.maven.extension.dependency.modelmodifier.ModelModifier;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.DepVersionOverrider;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.PluginVersionOverrider;
@@ -57,15 +56,8 @@ public class ModifyModelLifecycleParticipant
             // Run the modifiers against the built model
             for ( ModelModifier currModifier : buildModifierList )
             {
-                Model preModel = currModel.clone();
-                Model postModel = currModifier.updateModel( currModel );
-                if ( ModelCompare.areEqual( postModel, preModel ) )
-                {
-                    logger.debug( "Model did not change after running modifier '" + currModifier.getName() + "'" );
-                }
-                else
-                {
-                    logger.debug( "Model changed after running modifier '" + currModifier.getName() + "'" );
+                boolean modelChanged = currModifier.updateModel( currModel );
+                if (modelChanged) {
                     modelChangeCount++;
                 }
             }

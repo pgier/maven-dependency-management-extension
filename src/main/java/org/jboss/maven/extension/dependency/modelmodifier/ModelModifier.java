@@ -11,9 +11,9 @@ public interface ModelModifier
      * Possibly updates a model in some way (may do nothing).
      * 
      * @param model the Model to be modified
-     * @return the possibly updated Model model
+     * @return true iff the model changed
      */
-    public Model updateModel( Model model );
+    public boolean updateModel( Model model );
 
     /**
      * Get simple name of this modifier
@@ -21,4 +21,5 @@ public interface ModelModifier
      * @return Simple name of this modifier
      */
     public String getName();
+
 }

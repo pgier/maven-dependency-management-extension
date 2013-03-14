@@ -47,12 +47,12 @@ public class PluginVersionOverrider
 
     }
 
-    public Model updateModel( Model model )
+    public boolean updateModel( Model model )
     {
         Map<String, String> versionOverrides = getVersionOverrides();
         if ( versionOverrides.size() == 0 )
         {
-            return model;
+            return false;
         }
 
         // If the model doesn't have any plugin management set by default, create one for it
@@ -73,7 +73,7 @@ public class PluginVersionOverrider
 
         writeXmlMap( model, getName(), versionOverrides );
 
-        return model;
+        return true; // TODO dummy return value
     }
 
     /**
@@ -92,8 +92,8 @@ public class PluginVersionOverrider
                 String currVersion = plugin.getVersion();
                 String overrideVersion = pluginVersionOverrides.get( groupIdArtifactId );
                 plugin.setVersion( pluginVersionOverrides.get( groupIdArtifactId ) );
-                getLog().debug( "Plugin " + groupIdArtifactId + " was overridden from " + currVersion + " to " +
-                                    overrideVersion );
+                getLog().debug( "Plugin " + groupIdArtifactId + " was overridden from " + currVersion + " to "
+                                    + overrideVersion );
             }
         }
     }
