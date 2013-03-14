@@ -1,17 +1,13 @@
 package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.xml.transform.TransformerException;
-
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
-import org.jboss.maven.extension.dependency.metainf.OverrideMapWriter;
 import org.jboss.maven.extension.dependency.resolver.ArtifactDescriptorResolver;
 import org.jboss.maven.extension.dependency.util.VersionPropertyReader;
 import org.sonatype.aether.resolution.ArtifactDescriptorException;
@@ -84,17 +80,18 @@ public class DepVersionOverrider
             String artifactVersion = nonMatchingVersionOverrides.get( groupIdArtifactId );
             dependency.setVersion( artifactVersion );
             dependencyManagement.getDependencies().add( dependency );
-            getLog().debug( "New dependency added to Dependency Management: " + groupIdArtifactId + "=" +
-                                artifactVersion );
+            getLog().debug( "New dependency added to Dependency Management: " + groupIdArtifactId + "="
+                                + artifactVersion );
         }
 
         // Apply overides to project dependencies
         List<Dependency> projectDependencies = model.getDependencies();
         applyOverrides( projectDependencies, versionOverrides );
 
-        writeXmlMap( model, getName(), versionOverrides );
+        writeOverrideMap( model, getName(), versionOverrides );
 
-        return true; // TODO dummy return value
+        // Assuming the Model changed since overrides were given
+        return true;
     }
 
     /**
@@ -118,8 +115,8 @@ public class DepVersionOverrider
             {
                 String artifactVersion = overrides.get( groupIdArtifactId );
                 dependency.setVersion( artifactVersion );
-                getLog().debug( "Altered existing dependency in Dependency Management: " + groupIdArtifactId + "=" +
-                                    artifactVersion );
+                getLog().debug( "Altered existing dependency in Dependency Management: " + groupIdArtifactId + "="
+                                    + artifactVersion );
                 nonMatchingVersionOverrides.remove( groupIdArtifactId );
             }
         }
@@ -183,23 +180,6 @@ public class DepVersionOverrider
             dependencyResolver = new ArtifactDescriptorResolver();
         }
         return dependencyResolver;
-    }
-
-    private void writeXmlMap( Model model, String overrideName, Map<String, String> overrides )
-    {
-        OverrideMapWriter writeMapXML = new OverrideMapWriter( overrideName, overrides );
-        try
-        {
-            writeMapXML.writeXMLTo( model.getBuild() );
-        }
-        catch ( TransformerException e )
-        {
-            getLog().error( "Could not write " + overrideName + " override map to XML file: " + e.toString() );
-        }
-        catch ( IOException e )
-        {
-            getLog().error( "Could not write " + overrideName + " override map to XML file: " + e.toString() );
-        }
     }
 
 }

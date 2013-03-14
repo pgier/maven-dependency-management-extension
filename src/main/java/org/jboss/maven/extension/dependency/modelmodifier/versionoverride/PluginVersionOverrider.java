@@ -1,16 +1,13 @@
 package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 
-import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.transform.TransformerException;
-
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginManagement;
-import org.jboss.maven.extension.dependency.metainf.OverrideMapWriter;
 import org.jboss.maven.extension.dependency.util.VersionPropertyReader;
 
 /**
@@ -71,9 +68,10 @@ public class PluginVersionOverrider
         List<Plugin> projectPlugins = model.getBuild().getPlugins();
         overridePluginVersions( projectPlugins, versionOverrides );
 
-        writeXmlMap( model, getName(), versionOverrides );
+        writeOverrideMap( model, getName(), versionOverrides );
 
-        return true; // TODO dummy return value
+        // Assuming the Model changed since overrides were given
+        return true;
     }
 
     /**
@@ -117,23 +115,6 @@ public class PluginVersionOverrider
             pluginVersionOverrides.putAll( propPluginOverrides );
         }
         return pluginVersionOverrides;
-    }
-
-    private void writeXmlMap( Model model, String overrideName, Map<String, String> overrides )
-    {
-        OverrideMapWriter writeMapXML = new OverrideMapWriter( overrideName, overrides );
-        try
-        {
-            writeMapXML.writeXMLTo( model.getBuild() );
-        }
-        catch ( TransformerException e )
-        {
-            getLog().error( "Could not write " + overrideName + " override map to XML file: " + e.toString() );
-        }
-        catch ( IOException e )
-        {
-            getLog().error( "Could not write " + overrideName + " override map to XML file: " + e.toString() );
-        }
     }
 
 }
