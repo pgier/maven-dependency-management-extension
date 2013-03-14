@@ -1,9 +1,9 @@
-package org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride;
+package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 
 import java.util.Map;
 
 import org.codehaus.plexus.logging.Logger;
-import org.jboss.maven.extension.dependency.modelbuildingmodifier.ModelBuildingModifier;
+import org.jboss.maven.extension.dependency.modelmodifier.ModelModifier;
 import org.jboss.maven.extension.dependency.util.log.Logging;
 
 /**
@@ -11,7 +11,7 @@ import org.jboss.maven.extension.dependency.util.log.Logging;
  * artifactID
  */
 public abstract class AbstractVersionOverrider
-    implements ModelBuildingModifier
+    implements ModelModifier
 {
     /**
      * Logging abstraction

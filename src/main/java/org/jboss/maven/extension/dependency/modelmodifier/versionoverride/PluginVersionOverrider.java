@@ -1,4 +1,4 @@
-package org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride;
+package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -7,10 +7,9 @@ import java.util.Map;
 
 import javax.xml.transform.TransformerException;
 
+import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginManagement;
-import org.apache.maven.model.building.ModelBuildingRequest;
-import org.apache.maven.model.building.ModelBuildingResult;
 import org.jboss.maven.extension.dependency.metainf.OverrideMapWriter;
 import org.jboss.maven.extension.dependency.util.VersionPropertyReader;
 
@@ -48,20 +47,20 @@ public class PluginVersionOverrider
 
     }
 
-    public ModelBuildingResult updateModel( ModelBuildingRequest request, ModelBuildingResult result )
+    public Model updateModel( Model model )
     {
         Map<String, String> versionOverrides = getVersionOverrides();
         if ( versionOverrides.size() == 0 )
         {
-            return result;
+            return model;
         }
 
         // If the model doesn't have any plugin management set by default, create one for it
-        PluginManagement pluginManagement = result.getEffectiveModel().getBuild().getPluginManagement();
+        PluginManagement pluginManagement = model.getBuild().getPluginManagement();
         if ( pluginManagement == null )
         {
             pluginManagement = new PluginManagement();
-            result.getEffectiveModel().getBuild().setPluginManagement( pluginManagement );
+            model.getBuild().setPluginManagement( pluginManagement );
             getLog().debug( "Created new Plugin Management for model" );
         }
 
@@ -69,12 +68,12 @@ public class PluginVersionOverrider
         overridePluginVersions( pluginManagement.getPlugins(), versionOverrides );
 
         // Override plugin versions
-        List<Plugin> projectPlugins = result.getEffectiveModel().getBuild().getPlugins();
+        List<Plugin> projectPlugins = model.getBuild().getPlugins();
         overridePluginVersions( projectPlugins, versionOverrides );
 
-        writeXmlMap( result, getName(), versionOverrides );
+        writeXmlMap( model, getName(), versionOverrides );
 
-        return result;
+        return model;
     }
 
     /**
@@ -120,12 +119,12 @@ public class PluginVersionOverrider
         return pluginVersionOverrides;
     }
 
-    private void writeXmlMap( ModelBuildingResult result, String overrideName, Map<String, String> overrides )
+    private void writeXmlMap( Model model, String overrideName, Map<String, String> overrides )
     {
         OverrideMapWriter writeMapXML = new OverrideMapWriter( overrideName, overrides );
         try
         {
-            writeMapXML.writeXMLTo( result.getEffectiveModel().getBuild() );
+            writeMapXML.writeXMLTo( model.getBuild() );
         }
         catch ( TransformerException e )
         {

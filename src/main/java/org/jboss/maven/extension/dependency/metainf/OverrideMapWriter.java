@@ -20,7 +20,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Resource;
 import org.codehaus.plexus.logging.Logger;
-import org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride.VersionOverrideInfo;
+import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.VersionOverrideInfo;
 import org.jboss.maven.extension.dependency.util.log.Logging;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

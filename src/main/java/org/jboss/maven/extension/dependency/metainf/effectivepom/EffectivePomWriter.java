@@ -5,13 +5,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.SecureRandom;
 
-import org.apache.maven.AbstractMavenLifecycleParticipant;
-import org.apache.maven.MavenExecutionException;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Resource;
-import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.logging.Logger;
 import org.jboss.maven.extension.dependency.util.log.Logging;
 
@@ -20,70 +15,63 @@ import org.jboss.maven.extension.dependency.util.log.Logging;
  * at META-INF/maven/group/project/ with the name effective-pom.xml This is a similar functionality to the help plugin's
  * help:effective-pom goal, except it is meant to be included in a built jar
  */
-@Component( role = AbstractMavenLifecycleParticipant.class, hint = "pomwriter" )
 public class EffectivePomWriter
-    extends AbstractMavenLifecycleParticipant
 {
-    private Logger logger = Logging.getLogger();
-
-    // TODO: get this value from somewhere (probably needs to be set to an on state from one or more modelbuildingmodifiers)
-    private boolean extIsBeingUsed = true;
+    private static Logger logger = Logging.getLogger();
 
     /**
      * A unique name to use for a prefix in temp output
      */
     private static String OUTPUT_DIR_PREFIX = "mvndepext";
 
-    @Override
-    public void afterProjectsRead( MavenSession session )
-        throws MavenExecutionException
+    /**
+     * Write the POM formatted model to the filesystem, and add it to the model build resources
+     * 
+     * @param model The model to convert to a POM, and to add the POM to
+     * @throws IOException If there is a problem generating or writing the POM
+     */
+    public static void writeEffectivePOM( Model model )
+        throws IOException
     {
-        // Write out the effective pom and include it in the model resources, but only if the extension is being used
-        if ( extIsBeingUsed )
+        // Paths
+        String projectArtifactID = model.getArtifactId();
+        String projectGroupID = model.getGroupId();
+        String outputPath = TempDirectory.generateDir( OUTPUT_DIR_PREFIX ).toString();
+        String groupPath = outputPath + File.separator + projectGroupID;
+        String artifactPath = groupPath + File.separator + projectArtifactID;
+
+        File outputFile = new File( artifactPath + File.separator + "effective-pom.xml" );
+
+        // Generate POM XML
+        String pomContent;
+        try
         {
-            MavenProject currentProject = session.getCurrentProject();
-            Model model = currentProject.getModel();
-
-            // Paths
-            String projectArtifactID = model.getArtifactId();
-            String projectGroupID = model.getGroupId();
-            String outputPath = TempDirectory.generateDir( OUTPUT_DIR_PREFIX ).toString();
-            String groupPath = outputPath + File.separator + projectGroupID;
-            String artifactPath = groupPath + File.separator + projectArtifactID;
-
-            File outputFile = new File( artifactPath + File.separator + "effective-pom.xml" );
-
-            // Generate POM XML
-            String pomContent;
-            try
-            {
-                pomContent = EffectivePomGenerator.generatePom( model );
-            }
-            catch ( IOException e )
-            {
-                throw new MavenExecutionException( "Couldn't generate effective pom from internal model", e );
-            }
-
-            // Write POM to file
-            try
-            {
-                writeStringToFile( pomContent, outputFile );
-            }
-            catch ( IOException e )
-            {
-                throw new MavenExecutionException( "Couldn't write effective pom", e );
-            }
-
-            // Add outputPath directory tree to model build resources
-            Resource effPomResource = new Resource();
-            effPomResource.setDirectory( outputPath );
-            effPomResource.setTargetPath( "META-INF/" + "maven" );
-
-            model.getBuild().addResource( effPomResource );
-
-            // Done
-            logger.debug( "Effective pom written" );
+            pomContent = EffectivePomGenerator.generatePom( model );
         }
+        catch ( IOException e )
+        {
+            throw new IOException( "Couldn't generate effective pom from internal model", e );
+        }
+
+        // Write POM to file
+        try
+        {
+            writeStringToFile( pomContent, outputFile );
+        }
+        catch ( IOException e )
+        {
+            throw new IOException( "Couldn't write effective pom", e );
+        }
+
+        // Add outputPath directory tree to model build resources
+        Resource effPomResource = new Resource();
+        effPomResource.setDirectory( outputPath );
+        effPomResource.setTargetPath( "META-INF/" + "maven" );
+
+        model.getBuild().addResource( effPomResource );
+
+        // Done
+        logger.debug( "Effective POM written and included for '" + projectGroupID + ":" + projectArtifactID + "'" );
     }
 
     /**
@@ -129,7 +117,7 @@ public class EffectivePomWriter
         /**
          * Create a random directory in the temp directory using prefix as the start of the new directory name.
          * 
-         * @param prefix
+         * @param prefix The start String of the random directory basename
          * @return File representing the new directory
          */
         static File generateDir( String prefix )

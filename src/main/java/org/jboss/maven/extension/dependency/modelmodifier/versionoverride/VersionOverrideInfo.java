@@ -1,4 +1,4 @@
-package org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride;
+package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 
 public class VersionOverrideInfo
 {

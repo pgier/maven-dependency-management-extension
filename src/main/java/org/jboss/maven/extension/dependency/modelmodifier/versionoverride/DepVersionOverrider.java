@@ -1,4 +1,4 @@
-package org.jboss.maven.extension.dependency.modelbuildingmodifier.versionoverride;
+package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -10,8 +10,7 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
-import org.apache.maven.model.building.ModelBuildingRequest;
-import org.apache.maven.model.building.ModelBuildingResult;
+import org.apache.maven.model.Model;
 import org.jboss.maven.extension.dependency.metainf.OverrideMapWriter;
 import org.jboss.maven.extension.dependency.resolver.ArtifactDescriptorResolver;
 import org.jboss.maven.extension.dependency.util.VersionPropertyReader;
@@ -54,20 +53,20 @@ public class DepVersionOverrider
 
     }
 
-    public ModelBuildingResult updateModel( ModelBuildingRequest request, ModelBuildingResult result )
+    public Model updateModel( Model model )
     {
         Map<String, String> versionOverrides = getVersionOverrides();
         if ( versionOverrides.size() == 0 )
         {
-            return result;
+            return model;
         }
 
         // If the model doesn't have any Dependency Management set by default, create one for it
-        DependencyManagement dependencyManagement = result.getEffectiveModel().getDependencyManagement();
+        DependencyManagement dependencyManagement = model.getDependencyManagement();
         if ( dependencyManagement == null )
         {
             dependencyManagement = new DependencyManagement();
-            result.getEffectiveModel().setDependencyManagement( dependencyManagement );
+            model.setDependencyManagement( dependencyManagement );
             getLog().debug( "Created new Dependency Management for model" );
         }
 
@@ -90,12 +89,12 @@ public class DepVersionOverrider
         }
 
         // Apply overides to project dependencies
-        List<Dependency> projectDependencies = result.getEffectiveModel().getDependencies();
+        List<Dependency> projectDependencies = model.getDependencies();
         applyOverrides( projectDependencies, versionOverrides );
 
-        writeXmlMap( result, getName(), versionOverrides );
+        writeXmlMap( model, getName(), versionOverrides );
 
-        return result;
+        return model;
     }
 
     /**
@@ -186,12 +185,12 @@ public class DepVersionOverrider
         return dependencyResolver;
     }
 
-    private void writeXmlMap( ModelBuildingResult result, String overrideName, Map<String, String> overrides )
+    private void writeXmlMap( Model model, String overrideName, Map<String, String> overrides )
     {
         OverrideMapWriter writeMapXML = new OverrideMapWriter( overrideName, overrides );
         try
         {
-            writeMapXML.writeXMLTo( result.getEffectiveModel().getBuild() );
+            writeMapXML.writeXMLTo( model.getBuild() );
         }
         catch ( TransformerException e )
         {
