@@ -53,6 +53,7 @@ public abstract class AbstractVersionOverrider
         catch ( IOException e )
         {
             logger.error( "Could not write " + overrideName + " override map to file due to " + e );
+            Logging.logAllCauses( logger, e.getCause() );
         }
     }
 

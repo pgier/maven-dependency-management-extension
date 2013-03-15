@@ -15,7 +15,7 @@ public class OverridePropertiesGenerator
 
     public OverridePropertiesGenerator( Map<String, String> overrides, String description )
     {
-        this.description = description;
+        this.description = description + " overrides";
         this.overrides = overrides;
     }
 

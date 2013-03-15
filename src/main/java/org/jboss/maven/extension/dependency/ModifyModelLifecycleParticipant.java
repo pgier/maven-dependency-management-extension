@@ -74,25 +74,10 @@ public class ModifyModelLifecycleParticipant
                 catch ( IOException e )
                 {
                     logger.error( "Could not write the effective POM of model '" + currModel.getId() + "' due to " + e );
-                    logAllCauses( e.getCause() );
+                    Logging.logAllCauses( logger, e.getCause() );
                 }
             }
         }
 
-    }
-
-    /**
-     * Recursively log all causes in a Throwable chain
-     * 
-     * @param cause Will be null in the base case
-     */
-    private void logAllCauses( Throwable cause )
-    {
-        if ( cause == null )
-        {
-            return;
-        }
-        logger.error( "Cause: " + cause );
-        logAllCauses( cause.getCause() );
     }
 }
