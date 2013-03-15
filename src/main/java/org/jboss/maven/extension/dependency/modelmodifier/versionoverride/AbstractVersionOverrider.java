@@ -3,11 +3,10 @@ package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.xml.transform.TransformerException;
-
 import org.apache.maven.model.Model;
 import org.codehaus.plexus.logging.Logger;
-import org.jboss.maven.extension.dependency.metainf.OverrideMapWriter;
+import org.jboss.maven.extension.dependency.metainf.MetaInfWriter;
+import org.jboss.maven.extension.dependency.metainf.generator.OverridePropertiesGenerator;
 import org.jboss.maven.extension.dependency.modelmodifier.ModelModifier;
 import org.jboss.maven.extension.dependency.util.log.Logging;
 
@@ -47,18 +46,13 @@ public abstract class AbstractVersionOverrider
      */
     protected void writeOverrideMap( Model model, String overrideName, Map<String, String> overrides )
     {
-        OverrideMapWriter writeMapXML = new OverrideMapWriter( overrideName, overrides );
         try
         {
-            writeMapXML.writeXMLTo( model.getBuild() );
-        }
-        catch ( TransformerException e )
-        {
-            logger.error( "Could not write " + overrideName + " override map to XML file: " + e.toString() );
+            MetaInfWriter.writeResource( model, new OverridePropertiesGenerator(overrides, overrideName) );
         }
         catch ( IOException e )
         {
-            logger.error( "Could not write " + overrideName + " override map to XML file: " + e.toString() );
+            logger.error( "Could not write " + overrideName + " override map to file due to " + e );
         }
     }
 

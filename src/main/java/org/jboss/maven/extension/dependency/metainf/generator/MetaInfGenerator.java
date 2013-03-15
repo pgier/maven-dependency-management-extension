@@ -24,4 +24,11 @@ public interface MetaInfGenerator
      */
     public String getDescription();
 
+    /**
+     * If the data is going to be written to a file, what extension should it have ideally?
+     * 
+     * @return a few character String of a file extension to use if writing the data to a file.
+     */
+    public String getDesiredFileExtension();
+
 }

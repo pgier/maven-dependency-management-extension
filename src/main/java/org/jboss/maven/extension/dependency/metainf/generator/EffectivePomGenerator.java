@@ -53,6 +53,12 @@ public class EffectivePomGenerator
     @Override
     public String getDescription()
     {
-        return "effective POM";
+        return "effective pom";
+    }
+
+    @Override
+    public String getDesiredFileExtension()
+    {
+        return "xml";
     }
 }

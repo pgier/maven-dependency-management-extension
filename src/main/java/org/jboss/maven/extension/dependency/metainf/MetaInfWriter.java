@@ -39,7 +39,13 @@ public class MetaInfWriter
         String groupPath = outputPath + File.separator + projectGroupID;
         String artifactPath = groupPath + File.separator + projectArtifactID;
 
-        File outputFile = new File( artifactPath + File.separator + "effective-pom.xml" );
+        // Generator info
+        String desc = generator.getDescription();
+        String fileName = generator.getDescription().replace( " ", "-" );
+        String fileExt = generator.getDesiredFileExtension();
+
+        // File ref
+        File outputFile = new File( artifactPath + File.separator + fileName + "." + fileExt );
 
         // Get content
         String content;
@@ -49,7 +55,7 @@ public class MetaInfWriter
         }
         catch ( IOException e )
         {
-            throw new IOException( "Couldn't generate " + generator.getDescription() + " from internal model", e );
+            throw new IOException( "Couldn't generate " + desc + " from internal model", e );
         }
 
         // Write content to file
@@ -59,7 +65,7 @@ public class MetaInfWriter
         }
         catch ( IOException e )
         {
-            throw new IOException( "Couldn't write " + generator.getDescription(), e );
+            throw new IOException( "Couldn't write " + desc, e );
         }
 
         // Add outputPath directory tree to model build resources
@@ -70,8 +76,7 @@ public class MetaInfWriter
         model.getBuild().addResource( newResource );
 
         // Done
-        logger.debug( generator.getDescription() + " written and included for '" + projectGroupID + ":"
-            + projectArtifactID + "'" );
+        logger.debug( desc + " written and included for '" + projectGroupID + ":" + projectArtifactID + "'" );
     }
 
     /**
