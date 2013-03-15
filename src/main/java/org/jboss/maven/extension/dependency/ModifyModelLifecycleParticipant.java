@@ -11,7 +11,8 @@ import org.apache.maven.model.Model;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.logging.Logger;
-import org.jboss.maven.extension.dependency.metainf.effectivepom.EffectivePomWriter;
+import org.jboss.maven.extension.dependency.metainf.MetaInfWriter;
+import org.jboss.maven.extension.dependency.metainf.generator.EffectivePomGenerator;
 import org.jboss.maven.extension.dependency.modelmodifier.ModelModifier;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.DepVersionOverrider;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.PluginVersionOverrider;
@@ -68,7 +69,7 @@ public class ModifyModelLifecycleParticipant
                 logger.debug( "Model changed at least once, writing informational files" );
                 try
                 {
-                    EffectivePomWriter.writeEffectivePOM( currModel );
+                    MetaInfWriter.writeResource( currModel, new EffectivePomGenerator() );
                 }
                 catch ( IOException e )
                 {

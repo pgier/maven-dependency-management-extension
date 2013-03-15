@@ -1,4 +1,4 @@
-package org.jboss.maven.extension.dependency.metainf.effectivepom;
+package org.jboss.maven.extension.dependency.metainf.generator;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -13,6 +13,7 @@ import org.codehaus.plexus.util.xml.XMLWriter;
  * help:effective-pom's pom, but should be close.
  */
 public class EffectivePomGenerator
+    implements MetaInfGenerator
 {
     /**
      * Convert an in-memory model to POM XML in string format.
@@ -21,7 +22,8 @@ public class EffectivePomGenerator
      * @return The POM XML representation of the project's model
      * @throws IOException If MavenXpp3Writer fails to write the raw xml to the internal buffer.
      */
-    public static String generatePom( Model model )
+    @Override
+    public String generateContent( Model model )
         throws IOException
     {
         String encoding = model.getModelEncoding();
@@ -46,5 +48,11 @@ public class EffectivePomGenerator
         // <?xml version="1.0" encoding="UTF-8"?>
 
         return effectivePom;
+    }
+
+    @Override
+    public String getDescription()
+    {
+        return "effective POM";
     }
 }

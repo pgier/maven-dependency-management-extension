@@ -1,4 +1,4 @@
-package org.jboss.maven.extension.dependency.metainf.effectivepom;
+package org.jboss.maven.extension.dependency.metainf;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -8,14 +8,13 @@ import java.security.SecureRandom;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Resource;
 import org.codehaus.plexus.logging.Logger;
+import org.jboss.maven.extension.dependency.metainf.generator.MetaInfGenerator;
 import org.jboss.maven.extension.dependency.util.log.Logging;
 
 /**
- * This class writes out the effective pom from the in-memory model, to be included alongside the copied pom (pom.xml)
- * at META-INF/maven/group/project/ with the name effective-pom.xml This is a similar functionality to the help plugin's
- * help:effective-pom goal, except it is meant to be included in a built jar
+ * This class writes out metainf resources to be included with the jar at META-INF/maven/group/project/
  */
-public class EffectivePomWriter
+public class MetaInfWriter
 {
     private static Logger logger = Logging.getLogger();
 
@@ -30,7 +29,7 @@ public class EffectivePomWriter
      * @param model The model to convert to a POM, and to add the POM to
      * @throws IOException If there is a problem generating or writing the POM
      */
-    public static void writeEffectivePOM( Model model )
+    public static void writeResource( Model model, MetaInfGenerator generator )
         throws IOException
     {
         // Paths
@@ -42,36 +41,37 @@ public class EffectivePomWriter
 
         File outputFile = new File( artifactPath + File.separator + "effective-pom.xml" );
 
-        // Generate POM XML
-        String pomContent;
+        // Get content
+        String content;
         try
         {
-            pomContent = EffectivePomGenerator.generatePom( model );
+            content = generator.generateContent( model );
         }
         catch ( IOException e )
         {
-            throw new IOException( "Couldn't generate effective pom from internal model", e );
+            throw new IOException( "Couldn't generate " + generator.getDescription() + " from internal model", e );
         }
 
-        // Write POM to file
+        // Write content to file
         try
         {
-            writeStringToFile( pomContent, outputFile );
+            writeStringToFile( content, outputFile );
         }
         catch ( IOException e )
         {
-            throw new IOException( "Couldn't write effective pom", e );
+            throw new IOException( "Couldn't write " + generator.getDescription(), e );
         }
 
         // Add outputPath directory tree to model build resources
-        Resource effPomResource = new Resource();
-        effPomResource.setDirectory( outputPath );
-        effPomResource.setTargetPath( "META-INF/" + "maven" );
+        Resource newResource = new Resource();
+        newResource.setDirectory( outputPath );
+        newResource.setTargetPath( "META-INF/maven" );
 
-        model.getBuild().addResource( effPomResource );
+        model.getBuild().addResource( newResource );
 
         // Done
-        logger.debug( "Effective POM written and included for '" + projectGroupID + ":" + projectArtifactID + "'" );
+        logger.debug( generator.getDescription() + " written and included for '" + projectGroupID + ":"
+            + projectArtifactID + "'" );
     }
 
     /**
