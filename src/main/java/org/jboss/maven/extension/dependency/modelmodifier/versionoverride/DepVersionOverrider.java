@@ -40,8 +40,6 @@ public class DepVersionOverrider
 
     private Map<String, String> dependencyVersionOverrides;
 
-    private static EffectiveModelBuilder dependencyResolver;
-
     /**
      * Default constructor
      */
@@ -179,14 +177,5 @@ public class DepVersionOverrider
 
         return versionOverrides;
     }
-
-    /*private static ArtifactDescriptorResolver getMavenDepResolver()
-    {
-        if ( dependencyResolver == null )
-        {
-            dependencyResolver = ArtifactDescriptorResolver.;
-        }
-        return dependencyResolver;
-    }*/
 
 }
