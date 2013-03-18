@@ -16,7 +16,6 @@ import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
 import org.apache.maven.model.resolution.ModelResolver;
 import org.codehaus.plexus.DefaultPlexusContainer;
-import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.logging.Logger;
@@ -55,7 +54,17 @@ public class EffectiveModelBuilder
 
     private ModelBuilder modelBuilder;
 
-    // private List<RemoteRepository> repositories;
+    private List<RemoteRepository> repositories;
+
+    public List<RemoteRepository> getRepositories()
+    {
+        return repositories;
+    }
+
+    public void setRepositories( List<RemoteRepository> repositories )
+    {
+        this.repositories = repositories;
+    }
 
     /**
      * Private constructor for singleton
@@ -183,10 +192,14 @@ public class EffectiveModelBuilder
      */
     private List<RemoteRepository> getRemoteRepositories()
     {
-        List<RemoteRepository> repositories = new ArrayList<RemoteRepository>();
+        if (repositories == null)
+        {
+            // Set default repository list to include Maven central
+            repositories = new ArrayList<RemoteRepository>();
 
-        String remoteRepoUrl = "http://repo1.maven.org/maven2/";
-        repositories.add( new RemoteRepository( "central", "default", remoteRepoUrl ) );
+            String remoteRepoUrl = "http://repo1.maven.org/maven2/";    
+            repositories.add( new RemoteRepository( "central", "default", remoteRepoUrl ) );
+        }
 
         return repositories;
     }
@@ -221,8 +234,6 @@ public class EffectiveModelBuilder
     private static RepositorySystem newRepositorySystem()
         throws ComponentLookupException, PlexusContainerException
     {
-        PlexusContainer container = new DefaultPlexusContainer();
-
         return new DefaultPlexusContainer().lookup( RepositorySystem.class );
     }
 

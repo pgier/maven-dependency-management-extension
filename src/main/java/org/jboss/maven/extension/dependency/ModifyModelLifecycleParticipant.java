@@ -10,8 +10,6 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuilder;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.rtinfo.RuntimeInformation;
-import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
@@ -25,7 +23,6 @@ import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.Plugin
 import org.jboss.maven.extension.dependency.resolver.EffectiveModelBuilder;
 import org.jboss.maven.extension.dependency.util.log.Logging;
 import org.sonatype.aether.impl.ArtifactResolver;
-import org.sonatype.aether.impl.RemoteRepositoryManager;
 
 /**
  * Main executor. Operates at the point defined by superclass as "afterProjectsRead", which is "after all MavenProject
@@ -41,16 +38,7 @@ public class ModifyModelLifecycleParticipant
     private final List<ModelModifier> buildModifierList = new ArrayList<ModelModifier>();
 
     @Requirement
-    private RuntimeInformation runtime;
-
-    @Requirement
-    private PlexusContainer container;
-
-    @Requirement
     private ArtifactResolver resolver;
-
-    @Requirement
-    private RemoteRepositoryManager repoManager;
 
     @Requirement
     private ModelBuilder modelBuilder;
