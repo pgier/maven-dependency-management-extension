@@ -8,15 +8,24 @@ import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.building.ModelBuilder;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.rtinfo.RuntimeInformation;
+import org.codehaus.plexus.PlexusContainer;
+import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.component.annotations.Requirement;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.logging.Logger;
 import org.jboss.maven.extension.dependency.metainf.MetaInfWriter;
 import org.jboss.maven.extension.dependency.metainf.generator.EffectivePomGenerator;
 import org.jboss.maven.extension.dependency.modelmodifier.ModelModifier;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.DepVersionOverrider;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.PluginVersionOverrider;
+import org.jboss.maven.extension.dependency.resolver.EffectiveModelBuilder;
 import org.jboss.maven.extension.dependency.util.log.Logging;
+import org.sonatype.aether.impl.ArtifactResolver;
+import org.sonatype.aether.impl.RemoteRepositoryManager;
 
 /**
  * Main executor. Operates at the point defined by superclass as "afterProjectsRead", which is "after all MavenProject
@@ -31,6 +40,21 @@ public class ModifyModelLifecycleParticipant
 
     private final List<ModelModifier> buildModifierList = new ArrayList<ModelModifier>();
 
+    @Requirement
+    private RuntimeInformation runtime;
+
+    @Requirement
+    private PlexusContainer container;
+
+    @Requirement
+    private ArtifactResolver resolver;
+
+    @Requirement
+    private RemoteRepositoryManager repoManager;
+
+    @Requirement
+    private ModelBuilder modelBuilder;
+
     /**
      * Load the build modifiers at instantiation time
      */
@@ -40,12 +64,29 @@ public class ModifyModelLifecycleParticipant
 
         buildModifierList.add( new DepVersionOverrider() );
         buildModifierList.add( new PluginVersionOverrider() );
+
     }
 
     @Override
     public void afterProjectsRead( MavenSession session )
         throws MavenExecutionException
     {
+
+        try
+        {
+            EffectiveModelBuilder.init( session, resolver, modelBuilder );
+        }
+        catch ( ComponentLookupException e1 )
+        {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        catch ( PlexusContainerException e1 )
+        {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
         // Apply model modifiers to the projects' models
         for ( MavenProject project : session.getProjects() )
         {
@@ -58,7 +99,8 @@ public class ModifyModelLifecycleParticipant
             for ( ModelModifier currModifier : buildModifierList )
             {
                 boolean modelChanged = currModifier.updateModel( currModel );
-                if (modelChanged) {
+                if ( modelChanged )
+                {
                     modelChangeCount++;
                 }
             }

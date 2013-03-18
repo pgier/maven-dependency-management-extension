@@ -8,7 +8,8 @@ import java.util.Properties;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
-import org.jboss.maven.extension.dependency.resolver.ArtifactDescriptorResolver;
+import org.apache.maven.model.building.ModelBuildingException;
+import org.jboss.maven.extension.dependency.resolver.EffectiveModelBuilder;
 import org.jboss.maven.extension.dependency.util.VersionPropertyReader;
 import org.sonatype.aether.resolution.ArtifactDescriptorException;
 import org.sonatype.aether.resolution.ArtifactResolutionException;
@@ -39,7 +40,7 @@ public class DepVersionOverrider
 
     private Map<String, String> dependencyVersionOverrides;
 
-    private static ArtifactDescriptorResolver dependencyResolver;
+    private static EffectiveModelBuilder dependencyResolver;
 
     /**
      * Default constructor
@@ -157,7 +158,8 @@ public class DepVersionOverrider
         {
             try
             {
-                versionOverrides = getMavenDepResolver().getRemoteVersionOverrides( depMgmtPomGAV );
+                EffectiveModelBuilder resolver = EffectiveModelBuilder.getInstance();
+                versionOverrides = resolver.getRemoteDependencyVersionOverrides( depMgmtPomGAV );
             }
             catch ( ArtifactResolutionException e )
             {
@@ -167,19 +169,24 @@ public class DepVersionOverrider
             {
                 getLog().warn( "Unable to resolve remote pom: " + e );
             }
+            catch ( ModelBuildingException e )
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
         }
 
         return versionOverrides;
     }
 
-    private static ArtifactDescriptorResolver getMavenDepResolver()
+    /*private static ArtifactDescriptorResolver getMavenDepResolver()
     {
         if ( dependencyResolver == null )
         {
-            dependencyResolver = new ArtifactDescriptorResolver();
+            dependencyResolver = ArtifactDescriptorResolver.;
         }
         return dependencyResolver;
-    }
+    }*/
 
 }
