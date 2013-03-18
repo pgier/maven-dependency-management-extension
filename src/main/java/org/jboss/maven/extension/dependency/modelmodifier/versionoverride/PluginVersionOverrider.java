@@ -4,11 +4,16 @@ package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginManagement;
+import org.apache.maven.model.building.ModelBuildingException;
+import org.jboss.maven.extension.dependency.resolver.EffectiveModelBuilder;
 import org.jboss.maven.extension.dependency.util.VersionPropertyReader;
+import org.sonatype.aether.resolution.ArtifactDescriptorException;
+import org.sonatype.aether.resolution.ArtifactResolutionException;
 
 /**
  * Overrides plugin versions in a model
@@ -44,6 +49,7 @@ public class PluginVersionOverrider
 
     }
 
+    @Override
     public boolean updateModel( Model model )
     {
         Map<String, String> versionOverrides = getVersionOverrides();
@@ -102,13 +108,17 @@ public class PluginVersionOverrider
         return OVERRIDE_NAME;
     }
 
+    /**
+     * Get the set of versions which will be used to override local plugin versions.
+     */
     public Map<String, String> getVersionOverrides()
     {
         if ( pluginVersionOverrides == null )
         {
             pluginVersionOverrides = new HashMap<String, String>();
 
-            // TODO: load remote plugin management
+            Map<String, String> remoteDepOverrides = loadRemotePluginVersionOverrides();
+            pluginVersionOverrides.putAll( remoteDepOverrides );
 
             Map<String, String> propPluginOverrides =
                 VersionPropertyReader.getVersionPropertiesByPrepend( PLUGIN_VERSION_OVERRIDE_PREFIX );
@@ -116,5 +126,44 @@ public class PluginVersionOverrider
         }
         return pluginVersionOverrides;
     }
+
+    /**
+     * Get plugin management version properties from a remote POM
+     * 
+     * @return Map between the GA of the plugin and the version of the plugin.
+     */
+    private Map<String, String> loadRemotePluginVersionOverrides()
+    {
+        Properties systemProperties = System.getProperties();
+        String pluginMgmtPomGAV = systemProperties.getProperty( PLUGIN_MANAGEMENT_POM_PROPERTY );
+
+        Map<String, String> versionOverrides = new HashMap<String, String>( 0 );
+
+        if ( pluginMgmtPomGAV != null )
+        {
+            try
+            {
+                EffectiveModelBuilder resolver = EffectiveModelBuilder.getInstance();
+                versionOverrides = resolver.getRemotePluginVersionOverrides( pluginMgmtPomGAV );
+            }
+            catch ( ArtifactResolutionException e )
+            {
+                getLog().warn( "Unable to resolve remote pom: " + e );
+            }
+            catch ( ArtifactDescriptorException e )
+            {
+                getLog().warn( "Unable to resolve remote pom: " + e );
+            }
+            catch ( ModelBuildingException e )
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+        }
+
+        return versionOverrides;
+    }
+
 
 }

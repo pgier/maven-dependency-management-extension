@@ -48,6 +48,7 @@ public class DepVersionOverrider
 
     }
 
+    @Override
     public boolean updateModel( Model model )
     {
         Map<String, String> versionOverrides = getVersionOverrides();
@@ -129,6 +130,9 @@ public class DepVersionOverrider
         return OVERRIDE_NAME;
     }
 
+    /**
+     * Get the set of versions which will be used to override local dependency versions.
+     */
     public Map<String, String> getVersionOverrides()
     {
         if ( dependencyVersionOverrides == null )
@@ -145,6 +149,11 @@ public class DepVersionOverrider
         return dependencyVersionOverrides;
     }
 
+    /**
+     * Get dependency management version properties from a remote POM
+     * 
+     * @return Map between the GA of the dependency and the version of the dependency.
+     */
     private Map<String, String> loadRemoteDepVersionOverrides()
     {
         Properties systemProperties = System.getProperties();
