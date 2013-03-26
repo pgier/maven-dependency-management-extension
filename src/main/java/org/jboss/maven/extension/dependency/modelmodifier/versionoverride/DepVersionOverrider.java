@@ -96,6 +96,31 @@ public class DepVersionOverrider
         return true;
     }
 
+    @Override
+    public String getName()
+    {
+        return OVERRIDE_NAME;
+    }
+
+    /**
+     * Get the set of versions which will be used to override local dependency versions.
+     */
+    private Map<String, String> getVersionOverrides()
+    {
+        if ( dependencyVersionOverrides == null )
+        {
+            dependencyVersionOverrides = new HashMap<String, String>();
+
+            Map<String, String> remoteDepOverrides = loadRemoteDepVersionOverrides();
+            dependencyVersionOverrides.putAll( remoteDepOverrides );
+
+            Map<String, String> propDepOverrides =
+                VersionPropertyReader.getPropertiesByPrefix( DEPENDENCY_VERSION_OVERRIDE_PREFIX );
+            dependencyVersionOverrides.putAll( propDepOverrides );
+        }
+        return dependencyVersionOverrides;
+    }
+
     /**
      * Apply a set of version overrides to a list of dependencies. Return a set of the overrides which were not applied.
      * 
@@ -103,7 +128,7 @@ public class DepVersionOverrider
      * @param overrides The map of dependency version overrides
      * @return The map of overrides that were not matched in the dependencies
      */
-    public Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides )
+    private static Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides )
     {
         // Duplicate the override map so unused overrides can be easily recorded
         Map<String, String> nonMatchingVersionOverrides = new HashMap<String, String>();
@@ -125,37 +150,12 @@ public class DepVersionOverrider
         return nonMatchingVersionOverrides;
     }
 
-    @Override
-    public String getName()
-    {
-        return OVERRIDE_NAME;
-    }
-
-    /**
-     * Get the set of versions which will be used to override local dependency versions.
-     */
-    public Map<String, String> getVersionOverrides()
-    {
-        if ( dependencyVersionOverrides == null )
-        {
-            dependencyVersionOverrides = new HashMap<String, String>();
-
-            Map<String, String> remoteDepOverrides = loadRemoteDepVersionOverrides();
-            dependencyVersionOverrides.putAll( remoteDepOverrides );
-
-            Map<String, String> propDepOverrides =
-                VersionPropertyReader.getPropertiesByPrefix( DEPENDENCY_VERSION_OVERRIDE_PREFIX );
-            dependencyVersionOverrides.putAll( propDepOverrides );
-        }
-        return dependencyVersionOverrides;
-    }
-
     /**
      * Get dependency management version properties from a remote POM
      * 
      * @return Map between the GA of the dependency and the version of the dependency.
      */
-    private Map<String, String> loadRemoteDepVersionOverrides()
+    private static Map<String, String> loadRemoteDepVersionOverrides()
     {
         Properties systemProperties = System.getProperties();
         String depMgmtPomGAV = systemProperties.getProperty( DEPENDENCY_MANAGEMENT_POM_PROPERTY );
@@ -185,5 +185,4 @@ public class DepVersionOverrider
 
         return versionOverrides;
     }
-
 }

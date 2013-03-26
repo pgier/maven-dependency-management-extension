@@ -33,11 +33,6 @@ public abstract class AbstractVersionOverrider
     protected static final String GAV_SEPERATOR = ":";
 
     /**
-     * Get the set of version overrides to be applied to the build
-     */
-    public abstract Map<String, String> getVersionOverrides();
-
-    /**
      * Writes String/String override maps to XML
      * 
      * @param model
