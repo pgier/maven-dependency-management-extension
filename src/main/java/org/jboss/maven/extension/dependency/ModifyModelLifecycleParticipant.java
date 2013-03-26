@@ -64,15 +64,13 @@ public class ModifyModelLifecycleParticipant
         {
             EffectiveModelBuilder.init( session, resolver, modelBuilder );
         }
-        catch ( ComponentLookupException e1 )
+        catch ( ComponentLookupException e )
         {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+            logger.fatalError( "EffectiveModelBuilder init could not look up plexus component: " + e );
         }
-        catch ( PlexusContainerException e1 )
+        catch ( PlexusContainerException e )
         {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+            logger.fatalError( "EffectiveModelBuilder init produced a plexus container error: " + e );
         }
 
         // Apply model modifiers to the projects' models
