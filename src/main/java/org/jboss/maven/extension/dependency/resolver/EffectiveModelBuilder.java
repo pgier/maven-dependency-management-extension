@@ -99,19 +99,19 @@ public class EffectiveModelBuilder
     {
         Map<String, String> versionOverrides = new HashMap<String, String>();
 
-        System.out.println("resolving gav: " + gav);
+        System.out.println( "resolving gav: " + gav );
         Artifact artifact = resolvePom( gav );
-        
+
         ModelResolver modelResolver = this.newModelResolver();
 
         Model effectiveModel = buildModel( artifact.getFile(), modelResolver );
-        System.out.println("Built model for project: " + effectiveModel.getName());
+        System.out.println( "Built model for project: " + effectiveModel.getName() );
 
         for ( org.apache.maven.model.Dependency dep : effectiveModel.getDependencyManagement().getDependencies() )
         {
             String groupIdArtifactId = dep.getGroupId() + ":" + dep.getArtifactId();
             versionOverrides.put( groupIdArtifactId, dep.getVersion() );
-            System.out.println("Added version override for: " + groupIdArtifactId + ":" + dep.getVersion());
+            System.out.println( "Added version override for: " + groupIdArtifactId + ":" + dep.getVersion() );
         }
 
         return versionOverrides;
@@ -192,12 +192,12 @@ public class EffectiveModelBuilder
      */
     private List<RemoteRepository> getRemoteRepositories()
     {
-        if (repositories == null)
+        if ( repositories == null )
         {
             // Set default repository list to include Maven central
             repositories = new ArrayList<RemoteRepository>();
 
-            String remoteRepoUrl = "http://repo1.maven.org/maven2/";    
+            String remoteRepoUrl = "http://repo1.maven.org/maven2/";
             repositories.add( new RemoteRepository( "central", "default", remoteRepoUrl ) );
         }
 
@@ -242,16 +242,17 @@ public class EffectiveModelBuilder
      * 
      * @param gav
      * @return The resolved pom artifact
-     * @throws ArtifactResolutionException 
+     * @throws ArtifactResolutionException
      */
-    private Artifact resolvePom(String gav) throws ArtifactResolutionException
+    private Artifact resolvePom( String gav )
+        throws ArtifactResolutionException
     {
         String[] gavParts = gav.split( ":" );
         String groupId = gavParts[0];
         String artifactId = gavParts[1];
         String version = gavParts[2];
         String extension = "pom";
-        
+
         Artifact artifact = new DefaultArtifact( groupId, artifactId, extension, version );
         artifact = resolveArtifact( artifact );
 
