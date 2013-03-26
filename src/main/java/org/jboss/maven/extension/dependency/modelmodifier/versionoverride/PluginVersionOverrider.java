@@ -121,7 +121,7 @@ public class PluginVersionOverrider
             pluginVersionOverrides.putAll( remoteDepOverrides );
 
             Map<String, String> propPluginOverrides =
-                VersionPropertyReader.getVersionPropertiesByPrepend( PLUGIN_VERSION_OVERRIDE_PREFIX );
+                VersionPropertyReader.getPropertiesByPrefix( PLUGIN_VERSION_OVERRIDE_PREFIX );
             pluginVersionOverrides.putAll( propPluginOverrides );
         }
         return pluginVersionOverrides;

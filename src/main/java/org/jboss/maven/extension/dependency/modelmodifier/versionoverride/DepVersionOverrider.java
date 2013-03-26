@@ -143,7 +143,7 @@ public class DepVersionOverrider
             dependencyVersionOverrides.putAll( remoteDepOverrides );
 
             Map<String, String> propDepOverrides =
-                VersionPropertyReader.getVersionPropertiesByPrepend( DEPENDENCY_VERSION_OVERRIDE_PREFIX );
+                VersionPropertyReader.getPropertiesByPrefix( DEPENDENCY_VERSION_OVERRIDE_PREFIX );
             dependencyVersionOverrides.putAll( propDepOverrides );
         }
         return dependencyVersionOverrides;

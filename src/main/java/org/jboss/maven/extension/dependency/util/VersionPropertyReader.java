@@ -10,23 +10,23 @@ import java.util.Properties;
 public class VersionPropertyReader
 {
     /**
-     * Filter System.getProperties() by accepting only properties with names that start with prepend. Trims prepend from
-     * the property names when inserting them into the returned Map.
+     * Filter System.getProperties() by accepting only properties with names that start with prefix. Trims the prefix
+     * from the property names when inserting them into the returned Map.
      * 
      * @param prepend The String that must be at the start of the property names
      * @return Map<String, String> map of properties with matching prepend and their values
      */
-    public static Map<String, String> getVersionPropertiesByPrepend( String prepend )
+    public static Map<String, String> getPropertiesByPrefix( String prefix )
     {
-
         Properties systemProperties = System.getProperties();
         Map<String, String> matchedProperties = new HashMap<String, String>();
+        int prefixLength = prefix.length();
 
         for ( String propertyName : systemProperties.stringPropertyNames() )
         {
-            if ( propertyName.startsWith( prepend ) )
+            if ( propertyName.startsWith( prefix ) )
             {
-                String trimmedPropertyName = propertyName.substring( prepend.length() );
+                String trimmedPropertyName = propertyName.substring( prefixLength );
                 matchedProperties.put( trimmedPropertyName, systemProperties.getProperty( propertyName ) );
             }
 
