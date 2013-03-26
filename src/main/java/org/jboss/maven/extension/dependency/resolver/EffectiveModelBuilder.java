@@ -150,7 +150,7 @@ public class EffectiveModelBuilder
 
         Map<String, String> versionOverrides = new HashMap<String, String>();
 
-        for ( Plugin plugin : effectiveModel.getBuild().getPluginManagement().getPlugins() )
+        for ( Plugin plugin : plugins )
         {
             String groupIdArtifactId = plugin.getGroupId() + ":" + plugin.getArtifactId();
             versionOverrides.put( groupIdArtifactId, plugin.getVersion() );
