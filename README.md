@@ -1,17 +1,27 @@
 # Maven Dependency Management Extension
 
-Maven extension which allows additional dependency management features such as overriding a dependency version from the command line.
+A Maven core extension which allows additional dependency management features such as overriding a dependency version from the command line.
+
+If any of the extension's options are used, they are recorded in .properties format in META-INF/maven/groupId/artifactId/, the same place that maven copies the normal pom file to. An "effective pom" representation of the post-modification model is written in the same directory as well. These actions help mitigate loss of build repeatability.
 
 ## Usage
-Pass a property to the maven build in the form:
+Pass one or more properties to the maven build in the form:
 
     version:<groupId>:<artifactId>=<version>
 
-to override a **dependency version**. Pass a property to the maven build in the form:
+to override **dependency versions**. Pass one or more properties to the maven build in the form:
 
     pluginVersion:<groupId>:<artifactId>=<version>
 
-to override a **plugin version**.
+to override **plugin versions**.
+
+It is possible to specify a remote POM for the purposes of affecting the plugin or dependency management instead of a series of properties. For dependencies, use:
+
+    dependencyManagement=<groupId>:<artifactId>:<version>
+
+and for plugins use:
+
+    pluginManagement=<groupId>:<artifactId>:<version>
 
 ### Examples
 The following overrides **junit**  to version **4.10**
