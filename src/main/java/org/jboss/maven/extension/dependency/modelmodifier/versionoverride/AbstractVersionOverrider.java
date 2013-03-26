@@ -33,13 +33,13 @@ public abstract class AbstractVersionOverrider
     protected static final String GAV_SEPERATOR = ":";
 
     /**
-     * Writes String/String override maps to XML
+     * Writes String/String override maps to .properties format
      * 
-     * @param model
-     * @param overrideName
-     * @param overrides
+     * @param model Model whose build to add the written file to
+     * @param overrideName Primary part of the written file name
+     * @param overrides Overrides to write as the file content
      */
-    protected void writeOverrideMap( Model model, String overrideName, Map<String, String> overrides )
+    protected static void writeOverrideMap( Model model, String overrideName, Map<String, String> overrides )
     {
         try
         {
