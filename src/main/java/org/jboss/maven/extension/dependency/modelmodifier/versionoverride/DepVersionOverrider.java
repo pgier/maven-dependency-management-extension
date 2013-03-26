@@ -38,16 +38,14 @@ public class DepVersionOverrider
      */
     private static final String OVERRIDE_NAME = "dependency";
 
+    /**
+     * Cache for override properties. Null until getVersionOverrides() is called.
+     */
     private Map<String, String> dependencyVersionOverrides;
 
     /**
-     * Default constructor
+     * Modify model's dependency management and direct dependencies.
      */
-    public DepVersionOverrider()
-    {
-
-    }
-
     @Override
     public boolean updateModel( Model model )
     {
@@ -66,28 +64,32 @@ public class DepVersionOverrider
             getLog().debug( "Created new Dependency Management for model" );
         }
 
-        // Apply matching overrides to dependency management
+        // Apply overrides to Dependency Management
         List<Dependency> dependencies = dependencyManagement.getDependencies();
         Map<String, String> nonMatchingVersionOverrides = applyOverrides( dependencies, versionOverrides );
 
-        // Add dependencies which did not match previously
+        // Add dependencies to Dependency Management which did not match any existing dependency
         for ( String groupIdArtifactId : nonMatchingVersionOverrides.keySet() )
         {
             String[] groupIdArtifactIdParts = groupIdArtifactId.split( ":" );
-            Dependency dependency = new Dependency();
-            dependency.setGroupId( groupIdArtifactIdParts[0] );
-            dependency.setArtifactId( groupIdArtifactIdParts[1] );
+
+            Dependency newDependency = new Dependency();
+            newDependency.setGroupId( groupIdArtifactIdParts[0] );
+            newDependency.setArtifactId( groupIdArtifactIdParts[1] );
+
             String artifactVersion = nonMatchingVersionOverrides.get( groupIdArtifactId );
-            dependency.setVersion( artifactVersion );
-            dependencyManagement.getDependencies().add( dependency );
+            newDependency.setVersion( artifactVersion );
+
+            dependencyManagement.getDependencies().add( newDependency );
             getLog().debug( "New dependency added to Dependency Management: " + groupIdArtifactId + "="
                                 + artifactVersion );
         }
 
-        // Apply overides to project dependencies
+        // Apply overrides to project dependencies
         List<Dependency> projectDependencies = model.getDependencies();
         applyOverrides( projectDependencies, versionOverrides );
 
+        // Include the overrides in the built files for repeatability
         writeOverrideMap( model, getName(), versionOverrides );
 
         // Assuming the Model changed since overrides were given
@@ -95,8 +97,7 @@ public class DepVersionOverrider
     }
 
     /**
-     * Apply a set of version overrides to a list of dependencies. Return a list of the overrides which were not
-     * applied.
+     * Apply a set of version overrides to a list of dependencies. Return a set of the overrides which were not applied.
      * 
      * @param dependencies The list of dependencies
      * @param overrides The map of dependency version overrides
@@ -104,10 +105,11 @@ public class DepVersionOverrider
      */
     public Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides )
     {
-        // Apply matching overrides to dependency management
+        // Duplicate the override map so unused overrides can be easily recorded
         Map<String, String> nonMatchingVersionOverrides = new HashMap<String, String>();
         nonMatchingVersionOverrides.putAll( overrides );
 
+        // Apply matching overrides to dependencies
         for ( Dependency dependency : dependencies )
         {
             String groupIdArtifactId = dependency.getGroupId() + GAV_SEPERATOR + dependency.getArtifactId();
@@ -115,8 +117,7 @@ public class DepVersionOverrider
             {
                 String artifactVersion = overrides.get( groupIdArtifactId );
                 dependency.setVersion( artifactVersion );
-                getLog().debug( "Altered existing dependency in Dependency Management: " + groupIdArtifactId + "="
-                                    + artifactVersion );
+                getLog().debug( "Altered dependency: " + groupIdArtifactId + "=" + artifactVersion );
                 nonMatchingVersionOverrides.remove( groupIdArtifactId );
             }
         }
@@ -178,10 +179,8 @@ public class DepVersionOverrider
             }
             catch ( ModelBuildingException e )
             {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                getLog().warn( "Unable to resolve remote pom: " + e );
             }
-
         }
 
         return versionOverrides;
