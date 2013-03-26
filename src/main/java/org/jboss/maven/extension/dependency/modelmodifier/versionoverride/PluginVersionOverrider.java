@@ -1,6 +1,5 @@
 package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,15 +38,10 @@ public class PluginVersionOverrider
      */
     private static final String PLUGIN_MANAGEMENT_POM_PROPERTY = "pluginManagement";
 
-    private Map<String, String> pluginVersionOverrides;
-
     /**
-     * Default constructor
+     * Cache for override properties. Null until getVersionOverrides() is called.
      */
-    public PluginVersionOverrider()
-    {
-
-    }
+    private Map<String, String> pluginVersionOverrides;
 
     @Override
     public boolean updateModel( Model model )
@@ -68,38 +62,17 @@ public class PluginVersionOverrider
         }
 
         // Override plugin management versions
-        overridePluginVersions( pluginManagement.getPlugins(), versionOverrides );
+        applyOverrides( pluginManagement.getPlugins(), versionOverrides );
 
         // Override plugin versions
         List<Plugin> projectPlugins = model.getBuild().getPlugins();
-        overridePluginVersions( projectPlugins, versionOverrides );
+        applyOverrides( projectPlugins, versionOverrides );
 
+        // Include the overrides in the built files for repeatability
         writeOverrideMap( model, getName(), versionOverrides );
 
         // Assuming the Model changed since overrides were given
         return true;
-    }
-
-    /**
-     * Set the versions of any plugins which match the contents of the list of plugin overrides
-     * 
-     * @param plugins The list of plugins to modify
-     * @param pluginVersionOverrides The list of version overrides to apply to the plugins
-     */
-    private void overridePluginVersions( List<Plugin> plugins, Map<String, String> pluginVersionOverrides )
-    {
-        for ( Plugin plugin : plugins )
-        {
-            String groupIdArtifactId = plugin.getGroupId() + GAV_SEPERATOR + plugin.getArtifactId();
-            if ( pluginVersionOverrides.containsKey( groupIdArtifactId ) )
-            {
-                String currVersion = plugin.getVersion();
-                String overrideVersion = pluginVersionOverrides.get( groupIdArtifactId );
-                plugin.setVersion( pluginVersionOverrides.get( groupIdArtifactId ) );
-                getLog().debug( "Plugin " + groupIdArtifactId + " was overridden from " + currVersion + " to "
-                                    + overrideVersion );
-            }
-        }
     }
 
     @Override
@@ -111,7 +84,7 @@ public class PluginVersionOverrider
     /**
      * Get the set of versions which will be used to override local plugin versions.
      */
-    public Map<String, String> getVersionOverrides()
+    private Map<String, String> getVersionOverrides()
     {
         if ( pluginVersionOverrides == null )
         {
@@ -128,11 +101,31 @@ public class PluginVersionOverrider
     }
 
     /**
+     * Set the versions of any plugins which match the contents of the list of plugin overrides
+     * 
+     * @param plugins The list of plugins to modify
+     * @param pluginVersionOverrides The list of version overrides to apply to the plugins
+     */
+    private static void applyOverrides( List<Plugin> plugins, Map<String, String> pluginVersionOverrides )
+    {
+        for ( Plugin plugin : plugins )
+        {
+            String groupIdArtifactId = plugin.getGroupId() + GAV_SEPERATOR + plugin.getArtifactId();
+            if ( pluginVersionOverrides.containsKey( groupIdArtifactId ) )
+            {
+                String overrideVersion = pluginVersionOverrides.get( groupIdArtifactId );
+                plugin.setVersion( overrideVersion );
+                getLog().debug( "Altered plugin: " + groupIdArtifactId + "=" + overrideVersion );
+            }
+        }
+    }
+
+    /**
      * Get plugin management version properties from a remote POM
      * 
      * @return Map between the GA of the plugin and the version of the plugin.
      */
-    private Map<String, String> loadRemotePluginVersionOverrides()
+    private static Map<String, String> loadRemotePluginVersionOverrides()
     {
         Properties systemProperties = System.getProperties();
         String pluginMgmtPomGAV = systemProperties.getProperty( PLUGIN_MANAGEMENT_POM_PROPERTY );
@@ -156,14 +149,10 @@ public class PluginVersionOverrider
             }
             catch ( ModelBuildingException e )
             {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                getLog().warn( "Unable to resolve remote pom: " + e );
             }
-
         }
 
         return versionOverrides;
     }
-
-
 }
