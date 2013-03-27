@@ -1,0 +1,5 @@
+Test Purpose:
+Verify the extension has no effect on dependency exclusions (i.e. it doesn't add dependencies where an exclusion would block them). It shouldn't do, as the current behaviour will only add dependencies to the model's dependency management (which is applied only to alter transitive dependency versions), and not to the actual dependency list.
+
+See:
+http://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html
