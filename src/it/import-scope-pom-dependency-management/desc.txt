@@ -1,0 +1,5 @@
+Test Purpose:
+Verify that Dependency Management dependencies imported via a import scoped pom dependency in Dependency Management are altered by the extension (The current behaviour).
+
+See:
+http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope
