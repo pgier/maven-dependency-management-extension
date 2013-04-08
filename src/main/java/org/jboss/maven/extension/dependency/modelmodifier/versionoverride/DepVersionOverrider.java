@@ -27,6 +27,12 @@ public class DepVersionOverrider
     private static final String DEPENDENCY_VERSION_OVERRIDE_PREFIX = "version:";
 
     /**
+     * The name of the property that specifies whether or not to add non-matching dependencies <br />
+     * ex: -DaddNewDeps=true
+     */
+    private static final String ADD_NON_MATCHING = "addNewDeps";
+
+    /**
      * The name of the property which contains the GAV of the remote pom from which to retrieve dependency management
      * information. <br />
      * ex: -DdependencyManagement:org.foo:bar-dep-mgmt:1.0
@@ -67,22 +73,28 @@ public class DepVersionOverrider
         // Apply overrides to Dependency Management
         List<Dependency> dependencies = dependencyManagement.getDependencies();
         Map<String, String> nonMatchingVersionOverrides = applyOverrides( dependencies, versionOverrides );
-
-        // Add dependencies to Dependency Management which did not match any existing dependency
-        for ( String groupIdArtifactId : nonMatchingVersionOverrides.keySet() )
+        if ( addNewDeps() )
         {
-            String[] groupIdArtifactIdParts = groupIdArtifactId.split( ":" );
+            // Add dependencies to Dependency Management which did not match any existing dependency
+            for ( String groupIdArtifactId : nonMatchingVersionOverrides.keySet() )
+            {
+                String[] groupIdArtifactIdParts = groupIdArtifactId.split( ":" );
 
-            Dependency newDependency = new Dependency();
-            newDependency.setGroupId( groupIdArtifactIdParts[0] );
-            newDependency.setArtifactId( groupIdArtifactIdParts[1] );
+                Dependency newDependency = new Dependency();
+                newDependency.setGroupId( groupIdArtifactIdParts[0] );
+                newDependency.setArtifactId( groupIdArtifactIdParts[1] );
 
-            String artifactVersion = nonMatchingVersionOverrides.get( groupIdArtifactId );
-            newDependency.setVersion( artifactVersion );
+                String artifactVersion = nonMatchingVersionOverrides.get( groupIdArtifactId );
+                newDependency.setVersion( artifactVersion );
 
-            dependencyManagement.getDependencies().add( newDependency );
-            getLog().debug( "New dependency added to Dependency Management: " + groupIdArtifactId + "="
-                                + artifactVersion );
+                dependencyManagement.getDependencies().add( newDependency );
+                getLog().debug( "New dependency added to Dependency Management: " + groupIdArtifactId + "="
+                                    + artifactVersion );
+            }
+        }
+        else
+        {
+            getLog().debug( "Non-matching dependencies ignored." );
         }
 
         // Apply overrides to project dependencies
@@ -100,6 +112,17 @@ public class DepVersionOverrider
     public String getName()
     {
         return OVERRIDE_NAME;
+    }
+
+    private boolean addNewDeps()
+    {
+        Properties systemProperties = System.getProperties();
+        String addNonMatching = systemProperties.getProperty( ADD_NON_MATCHING );
+        if ( addNonMatching != null && addNonMatching.equals( "false" ) )
+        {
+            return false;
+        }
+        return true;
     }
 
     /**
