@@ -1,0 +1,53 @@
+Name: maven-dependency-management-extension
+Version: $version
+Release: $release
+#if $epoch
+Epoch: $epoch
+#end if
+License: ASL 2.0
+Summary: Version convergence tool for use with Apache Maven 3.x
+Group: Development/Build Tools
+URL: https://github.com/jtripath/maven-dependency-management-extension
+#set $i = 0
+#for $artifact in $all_artifacts
+Source$i: $artifact
+#set $i += 1
+#end for
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildArch: noarch
+
+Requires: java-devel maven3
+BuildRequires: maven3
+
+%description
+This tool provides a means of standardizing the versions used in a project
+build, using one or more external sources to supply those versions
+
+%prep
+
+%build
+
+%install
+MAVEN_VERSION=$(basename /usr/share/java/apache-maven-*)
+MAVEN_VERSION=${MAVEN_VERSION#apache-maven-}
+#raw
+rm -rf %{buildroot}
+#for $artifact in $all_artifacts
+%{__install} -p -m 644 $artifact %{buildroot}%{_javadir}/apache-maven-$MAVEN_VERSION/lib/ext/$artifact
+#end for
+#end raw
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root,-)
+MAVEN_VERSION=$(basename /usr/share/java/apache-maven-*)
+MAVEN_VERSION=${MAVEN_VERSION#apache-maven-}
+#for $artifact in $all_artifacts
+%{__install} -p -m 644 $artifact %{buildroot}%{_javadir}/apache-maven-$MAVEN_VERSION/lib/ext/$artifact
+#end for
+
+%changelog
+* Fri Apr 12 2013 John Casey <jcasey@redhat.com> - 1.0-1
+- Initial build for 1.0-SNAPSHOT
