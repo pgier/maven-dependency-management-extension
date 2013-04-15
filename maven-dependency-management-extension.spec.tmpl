@@ -31,6 +31,7 @@ build, using one or more external sources to supply those versions
 
 %install
 rm -rf %{buildroot}
+%{__mkdir_p} %{buildroot}%{_javadir}/%{maven_dir}/lib/ext/
 %{__install} -p -m 644 %{_sourcedir}/${maven_info.artifact_id}-${maven_info.version}.jar %{buildroot}%{_javadir}/%{maven_dir}/lib/ext/
 
 %clean
