@@ -39,7 +39,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%{buildroot}%{_javadir}/%{maven_dir}/lib/ext/${maven_info.artifact_id}-${maven_info.version}.jar
+%{_javadir}/%{maven_dir}/lib/ext/${maven_info.artifact_id}-${maven_info.version}.jar
 
 %changelog
 * Fri Apr 12 2013 John Casey <jcasey@redhat.com> - 1.0-1
