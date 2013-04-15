@@ -1,4 +1,4 @@
-%global maven_version %(ls /usr/share/java/apache-maven-* 2>/dev/null | sed s/apache-maven-// || echo "unknown")
+%global maven_dir %(basename /usr/share/java/apache-maven-* || echo "unknown")
 
 Name: maven-dependency-management-extension
 Version: $version
@@ -30,21 +30,15 @@ build, using one or more external sources to supply those versions
 %build
 
 %install
-#raw
 rm -rf %{buildroot}
-#for $artifact in $all_artifacts
-%{__install} -p -m 644 $artifact %{buildroot}%{_javadir}/apache-maven-%{maven_version}/lib/ext/$artifact
-#end for
-#end raw
+%{__install} -p -m 644 %{_sourcedir}/${maven_info.artifact_id}-${maven_info.version}.jar %{buildroot}%{_javadir}/%{maven_dir}/lib/ext/
 
 %clean
 rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-#for $artifact in $all_artifacts
-%{buildroot}%{_javadir}/apache-maven-%{maven_version}/lib/ext/$artifact
-#end for
+%{buildroot}%{_javadir}/%{maven_dir}/lib/ext/${maven_info.artifact_id}-${maven_info.version}.jar
 
 %changelog
 * Fri Apr 12 2013 John Casey <jcasey@redhat.com> - 1.0-1
