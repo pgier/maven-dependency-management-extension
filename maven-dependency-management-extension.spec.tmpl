@@ -29,8 +29,8 @@ build, using one or more external sources to supply those versions
 
 %install
 #raw
-MAVEN_VERSION=$(basename /usr/share/java/apache-maven-*)
-MAVEN_VERSION=${MAVEN_VERSION#apache-maven-}
+MAVEN_VERSION=\$(basename /usr/share/java/apache-maven-*)
+MAVEN_VERSION=\${MAVEN_VERSION#apache-maven-}
 rm -rf %{buildroot}
 #for $artifact in $all_artifacts
 %{__install} -p -m 644 $artifact %{buildroot}%{_javadir}/apache-maven-$MAVEN_VERSION/lib/ext/$artifact
@@ -42,13 +42,6 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-#raw
-MAVEN_VERSION=$(basename /usr/share/java/apache-maven-*)
-MAVEN_VERSION=${MAVEN_VERSION#apache-maven-}
-#for $artifact in $all_artifacts
-%{__install} -p -m 644 $artifact %{buildroot}%{_javadir}/apache-maven-$MAVEN_VERSION/lib/ext/$artifact
-#end for
-#end raw
 
 %changelog
 * Fri Apr 12 2013 John Casey <jcasey@redhat.com> - 1.0-1
