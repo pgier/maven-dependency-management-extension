@@ -1,5 +1,4 @@
-%global 
-maven_version %(ls /usr/share/java/apache-maven-* 2>/dev/null | sed s/apache-maven-// || echo "unknown")
+%global maven_version %(ls /usr/share/java/apache-maven-* 2>/dev/null | sed s/apache-maven-// || echo "unknown")
 
 Name: maven-dependency-management-extension
 Version: $version
