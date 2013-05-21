@@ -71,11 +71,31 @@ public class EffectiveModelBuilder
 
     private List<RemoteRepository> repositories;
 
+    /**
+     * Get list of remote repositories from which to download artifacts
+     * 
+     * @return list of repositories
+     */
     public List<RemoteRepository> getRepositories()
     {
+        if ( repositories == null )
+        {
+            // Set default repository list to include Maven central
+            repositories = new ArrayList<RemoteRepository>();
+
+            String remoteRepoUrl = "http://repo1.maven.org/maven2/";
+            repositories.add( new RemoteRepository( "central", "default", remoteRepoUrl ) );
+        }
+
         return repositories;
     }
 
+    /**
+     * Set the list of remote repositories from which to download
+     * dependency management poms.
+     * 
+     * @param repositories
+     */
     public void setRepositories( List<RemoteRepository> repositories )
     {
         this.repositories = repositories;
@@ -114,19 +134,19 @@ public class EffectiveModelBuilder
     {
         Map<String, String> versionOverrides = new HashMap<String, String>();
 
-        System.out.println( "resolving gav: " + gav );
+        logger.debug( "resolving gav: " + gav );
         Artifact artifact = resolvePom( gav );
 
         ModelResolver modelResolver = this.newModelResolver();
 
         Model effectiveModel = buildModel( artifact.getFile(), modelResolver );
-        System.out.println( "Built model for project: " + effectiveModel.getName() );
+        logger.debug( "Built model for project: " + effectiveModel.getName() );
 
         for ( org.apache.maven.model.Dependency dep : effectiveModel.getDependencyManagement().getDependencies() )
         {
             String groupIdArtifactId = dep.getGroupId() + ":" + dep.getArtifactId();
             versionOverrides.put( groupIdArtifactId, dep.getVersion() );
-            System.out.println( "Added version override for: " + groupIdArtifactId + ":" + dep.getVersion() );
+            logger.debug( "Added version override for: " + groupIdArtifactId + ":" + dep.getVersion() );
         }
 
         return versionOverrides;
@@ -187,7 +207,7 @@ public class EffectiveModelBuilder
 
         ArtifactDescriptorRequest descRequest = new ArtifactDescriptorRequest();
         descRequest.setArtifact( artifact );
-        descRequest.setRepositories( getRemoteRepositories() );
+        descRequest.setRepositories( getRepositories() );
 
         ArtifactDescriptorResult descResult = repositorySystem.readArtifactDescriptor( repoSession, descRequest );
         for ( Dependency dep : descResult.getManagedDependencies() )
@@ -195,28 +215,9 @@ public class EffectiveModelBuilder
             logger.info( "Remote managed dep: " + dep );
         }
 
-        System.out.println( artifact + " resolved to  " + artifact.getFile() );
+        logger.debug( artifact + " resolved to  " + artifact.getFile() );
 
         return descResult;
-    }
-
-    /**
-     * Get list of remote repositories from which to download artifacts
-     * 
-     * @return list of repositories
-     */
-    private List<RemoteRepository> getRemoteRepositories()
-    {
-        if ( repositories == null )
-        {
-            // Set default repository list to include Maven central
-            repositories = new ArrayList<RemoteRepository>();
-
-            String remoteRepoUrl = "http://repo1.maven.org/maven2/";
-            repositories.add( new RemoteRepository( "central", "default", remoteRepoUrl ) );
-        }
-
-        return repositories;
     }
 
     /**
@@ -286,7 +287,7 @@ public class EffectiveModelBuilder
     {
         ArtifactRequest request = new ArtifactRequest();
         request.setArtifact( artifact );
-        request.setRepositories( getRemoteRepositories() );
+        request.setRepositories( getRepositories() );
 
         RepositorySystemSession repositorySession = session.getRepositorySession();
         ArtifactResult result = resolver.resolveArtifact( repositorySession, request );
@@ -297,7 +298,7 @@ public class EffectiveModelBuilder
     {
         RemoteRepositoryManager repoMgr = new DefaultRemoteRepositoryManager();
         ModelResolver modelResolver =
-            new BasicModelResolver( session.getRepositorySession(), resolver, repoMgr, getRemoteRepositories() );
+            new BasicModelResolver( session.getRepositorySession(), resolver, repoMgr, getRepositories() );
 
         return modelResolver;
     }
