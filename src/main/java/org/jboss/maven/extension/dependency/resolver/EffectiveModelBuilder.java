@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -69,6 +70,9 @@ public class EffectiveModelBuilder
 
     private ModelBuilder modelBuilder;
 
+    /**
+     * Repositories for downloading remote poms
+     */
     private List<RemoteRepository> repositories;
 
     /**
@@ -76,15 +80,11 @@ public class EffectiveModelBuilder
      * 
      * @return list of repositories
      */
-    public List<RemoteRepository> getRepositories()
+    private List<RemoteRepository> getRepositories()
     {
         if ( repositories == null )
         {
-            // Set default repository list to include Maven central
             repositories = new ArrayList<RemoteRepository>();
-
-            String remoteRepoUrl = "http://repo1.maven.org/maven2/";
-            repositories.add( new RemoteRepository( "central", "default", remoteRepoUrl ) );
         }
 
         return repositories;
@@ -99,6 +99,18 @@ public class EffectiveModelBuilder
     public void setRepositories( List<RemoteRepository> repositories )
     {
         this.repositories = repositories;
+    }
+
+    /**
+     * Set the list of remote repositories from which to download
+     * dependency management poms.
+     * 
+     * @param repositories
+     */
+    public void addRepository( ArtifactRepository repository )
+    {
+        RemoteRepository remoteRepo = new RemoteRepository(repository.getId(), "default", repository.getUrl());
+        getRepositories().add( remoteRepo );
     }
 
     /**
@@ -117,6 +129,25 @@ public class EffectiveModelBuilder
         instance.repositorySystem = newRepositorySystem();
         instance.resolver = resolver;
         instance.modelBuilder = modelBuilder;
+        initRepositories(session.getRequest().getRemoteRepositories());
+    }
+
+    /**
+     * Initialize the set of repositories from which to download remote artifacts
+     * @param repositories
+     */
+    private static void initRepositories(List<ArtifactRepository> repositories)
+    {
+        if (repositories == null || repositories.size() == 0)
+        {
+            // Set default repository list to include Maven central
+            String remoteRepoUrl = "http://repo.maven.apache.org/maven2";
+            instance.getRepositories().add( new RemoteRepository( "central", "default", remoteRepoUrl ) );
+        }
+        for (ArtifactRepository artifactRepository : repositories)
+        {
+            instance.addRepository( artifactRepository );
+        }
     }
 
     /**
