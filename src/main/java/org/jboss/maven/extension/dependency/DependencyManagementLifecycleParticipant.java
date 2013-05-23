@@ -44,8 +44,8 @@ import org.sonatype.aether.impl.ArtifactResolver;
  * instances have been created". This should allow access to the model(s) after they are built, but before they are
  * used.
  */
-@Component( role = AbstractMavenLifecycleParticipant.class, hint = "modifymodel" )
-public class ModifyModelLifecycleParticipant
+@Component( role = AbstractMavenLifecycleParticipant.class, hint = "dependencymanagement" )
+public class DependencyManagementLifecycleParticipant
     extends AbstractMavenLifecycleParticipant
 {
     private static final Logger logger = Logging.getLogger();
@@ -61,9 +61,9 @@ public class ModifyModelLifecycleParticipant
     /**
      * Load the build modifiers at instantiation time
      */
-    public ModifyModelLifecycleParticipant()
+    public DependencyManagementLifecycleParticipant()
     {
-        logger.debug( "New ModifyModelLifecycleParticipant contructed" );
+        logger.info( "Initializing Maven Dependency Management Extension" );
 
         buildModifierList.add( new DepVersionOverrider() );
         buildModifierList.add( new PluginVersionOverrider() );
@@ -81,11 +81,11 @@ public class ModifyModelLifecycleParticipant
         }
         catch ( ComponentLookupException e )
         {
-            logger.fatalError( "EffectiveModelBuilder init could not look up plexus component: " + e );
+            logger.error( "EffectiveModelBuilder init could not look up plexus component: " + e );
         }
         catch ( PlexusContainerException e )
         {
-            logger.fatalError( "EffectiveModelBuilder init produced a plexus container error: " + e );
+            logger.error( "EffectiveModelBuilder init produced a plexus container error: " + e );
         }
 
         // Apply model modifiers to the projects' models
