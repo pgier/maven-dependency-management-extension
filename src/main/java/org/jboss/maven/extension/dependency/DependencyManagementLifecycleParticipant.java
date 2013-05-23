@@ -36,7 +36,7 @@ import org.jboss.maven.extension.dependency.modelmodifier.ModelModifier;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.DepVersionOverrider;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.PluginVersionOverrider;
 import org.jboss.maven.extension.dependency.resolver.EffectiveModelBuilder;
-import org.jboss.maven.extension.dependency.util.log.Logging;
+import org.jboss.maven.extension.dependency.util.log.Log;
 import org.sonatype.aether.impl.ArtifactResolver;
 
 /**
@@ -48,7 +48,8 @@ import org.sonatype.aether.impl.ArtifactResolver;
 public class DependencyManagementLifecycleParticipant
     extends AbstractMavenLifecycleParticipant
 {
-    private static final Logger logger = Logging.getLogger();
+    @Requirement
+    private Logger logger;
 
     private final List<ModelModifier> buildModifierList = new ArrayList<ModelModifier>();
 
@@ -63,7 +64,8 @@ public class DependencyManagementLifecycleParticipant
      */
     public DependencyManagementLifecycleParticipant()
     {
-        logger.info( "Initializing Maven Dependency Management Extension" );
+        // Logger is not available yet
+        System.out.println( "[INFO] Init Maven Dependency Management Extension" );
 
         buildModifierList.add( new DepVersionOverrider() );
         buildModifierList.add( new PluginVersionOverrider() );
@@ -74,7 +76,7 @@ public class DependencyManagementLifecycleParticipant
     public void afterProjectsRead( MavenSession session )
         throws MavenExecutionException
     {
-
+        Log.setLog( logger );
         try
         {
             EffectiveModelBuilder.init( session, resolver, modelBuilder );
@@ -117,7 +119,6 @@ public class DependencyManagementLifecycleParticipant
                 catch ( IOException e )
                 {
                     logger.error( "Could not write the effective POM of model '" + currModel.getId() + "' due to " + e );
-                    Logging.logAllCauses( logger, e.getCause() );
                 }
             }
         }
