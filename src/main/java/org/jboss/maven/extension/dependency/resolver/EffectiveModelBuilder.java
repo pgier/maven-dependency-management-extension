@@ -34,7 +34,6 @@ import org.apache.maven.model.resolution.ModelResolver;
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.codehaus.plexus.logging.Logger;
 import org.jboss.maven.extension.dependency.util.log.Log;
 import org.sonatype.aether.RepositorySystem;
 import org.sonatype.aether.RepositorySystemSession;
@@ -89,8 +88,7 @@ public class EffectiveModelBuilder
     }
 
     /**
-     * Set the list of remote repositories from which to download
-     * dependency management poms.
+     * Set the list of remote repositories from which to download dependency management poms.
      * 
      * @param repositories
      */
@@ -100,14 +98,13 @@ public class EffectiveModelBuilder
     }
 
     /**
-     * Set the list of remote repositories from which to download
-     * dependency management poms.
+     * Set the list of remote repositories from which to download dependency management poms.
      * 
      * @param repositories
      */
     public void addRepository( ArtifactRepository repository )
     {
-        RemoteRepository remoteRepo = new RemoteRepository(repository.getId(), "default", repository.getUrl());
+        RemoteRepository remoteRepo = new RemoteRepository( repository.getId(), "default", repository.getUrl() );
         getRepositories().add( remoteRepo );
     }
 
@@ -127,22 +124,23 @@ public class EffectiveModelBuilder
         instance.repositorySystem = newRepositorySystem();
         instance.resolver = resolver;
         instance.modelBuilder = modelBuilder;
-        initRepositories(session.getRequest().getRemoteRepositories());
+        initRepositories( session.getRequest().getRemoteRepositories() );
     }
 
     /**
      * Initialize the set of repositories from which to download remote artifacts
+     * 
      * @param repositories
      */
-    private static void initRepositories(List<ArtifactRepository> repositories)
+    private static void initRepositories( List<ArtifactRepository> repositories )
     {
-        if (repositories == null || repositories.size() == 0)
+        if ( repositories == null || repositories.size() == 0 )
         {
             // Set default repository list to include Maven central
             String remoteRepoUrl = "http://repo.maven.apache.org/maven2";
             instance.getRepositories().add( new RemoteRepository( "central", "default", remoteRepoUrl ) );
         }
-        for (ArtifactRepository artifactRepository : repositories)
+        for ( ArtifactRepository artifactRepository : repositories )
         {
             instance.addRepository( artifactRepository );
         }

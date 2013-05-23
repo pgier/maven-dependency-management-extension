@@ -104,8 +104,8 @@ public class DepVersionOverrider
                 newDependency.setVersion( artifactVersion );
 
                 dependencyManagement.getDependencies().add( newDependency );
-                Log.getLog().debug( "New dependency added to Dependency Management: " + groupIdArtifactId + "="
-                                    + artifactVersion );
+                Log.getLog().debug( "New dependency added to Dependency Management: " + groupIdArtifactId + "=" +
+                                        artifactVersion );
             }
         }
         else

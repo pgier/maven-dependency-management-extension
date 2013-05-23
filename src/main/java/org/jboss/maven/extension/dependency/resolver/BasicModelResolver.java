@@ -38,9 +38,7 @@ import org.sonatype.aether.resolution.ArtifactResolutionException;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 
 /**
- * Basic implementation of ModelResolver to resolve pom files from 
- * a remote repository.
- *
+ * Basic implementation of ModelResolver to resolve pom files from a remote repository.
  */
 public class BasicModelResolver
     implements ModelResolver
@@ -56,9 +54,8 @@ public class BasicModelResolver
 
     private List<RemoteRepository> repositories;
 
-    public BasicModelResolver( RepositorySystemSession session,
-                                 ArtifactResolver resolver, RemoteRepositoryManager remoteRepositoryManager,
-                                 List<RemoteRepository> repositories )
+    public BasicModelResolver( RepositorySystemSession session, ArtifactResolver resolver,
+                               RemoteRepositoryManager remoteRepositoryManager, List<RemoteRepository> repositories )
     {
         this.session = session;
         this.resolver = resolver;
