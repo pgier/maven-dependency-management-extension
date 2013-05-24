@@ -43,10 +43,11 @@ public class DepVersionOverrider
     private static final String DEPENDENCY_VERSION_OVERRIDE_PREFIX = "version:";
 
     /**
-     * The name of the property that specifies whether or not to add non-matching dependencies <br />
-     * ex: -DaddNewDeps=true
+     * The name of the property that specifies whether or not to override transitive dependencies in the build. This
+     * causes non-matching dependencies to be added to the dependency management section of the pom. Default is true. <br />
+     * ex: -overrideTransitive=true
      */
-    private static final String ADD_NON_MATCHING = "addNewDeps";
+    private static final String OVERRIDE_TRANSITIVE = "overrideTransitive";
 
     /**
      * The name of the property which contains the GAV of the remote pom from which to retrieve dependency management
@@ -83,13 +84,13 @@ public class DepVersionOverrider
         {
             dependencyManagement = new DependencyManagement();
             model.setDependencyManagement( dependencyManagement );
-            Log.getLog().debug( "Created new Dependency Management for model" );
+            Log.getLog().debug( "Added <DependencyManagement/> for current project" );
         }
 
-        // Apply overrides to Dependency Management
+        // Apply overrides to project dependency management
         List<Dependency> dependencies = dependencyManagement.getDependencies();
         Map<String, String> nonMatchingVersionOverrides = applyOverrides( dependencies, versionOverrides );
-        if ( addNewDeps() )
+        if ( overrideTransitive() )
         {
             // Add dependencies to Dependency Management which did not match any existing dependency
             for ( String groupIdArtifactId : nonMatchingVersionOverrides.keySet() )
@@ -104,7 +105,7 @@ public class DepVersionOverrider
                 newDependency.setVersion( artifactVersion );
 
                 dependencyManagement.getDependencies().add( newDependency );
-                Log.getLog().debug( "New dependency added to Dependency Management: " + groupIdArtifactId + "=" +
+                Log.getLog().debug( "New entry added to <DependencyManagement/> - " + groupIdArtifactId + ":" +
                                         artifactVersion );
             }
         }
@@ -113,7 +114,7 @@ public class DepVersionOverrider
             Log.getLog().debug( "Non-matching dependencies ignored." );
         }
 
-        // Apply overrides to project dependencies
+        // Apply overrides to project direct dependencies
         List<Dependency> projectDependencies = model.getDependencies();
         applyOverrides( projectDependencies, versionOverrides );
 
@@ -130,15 +131,16 @@ public class DepVersionOverrider
         return OVERRIDE_NAME;
     }
 
-    private boolean addNewDeps()
+    /**
+     * Whether to override unmanaged transitive dependencies in the build. Has the effect of adding (or not) new entries
+     * to dependency management when no matching dependency is found in the pom. Defaults to true.
+     * 
+     * @return
+     */
+    private boolean overrideTransitive()
     {
-        Properties systemProperties = System.getProperties();
-        String addNonMatching = systemProperties.getProperty( ADD_NON_MATCHING );
-        if ( addNonMatching != null && addNonMatching.equals( "false" ) )
-        {
-            return false;
-        }
-        return true;
+        String overrideTransitive = System.getProperties().getProperty( OVERRIDE_TRANSITIVE, "true" );
+        return overrideTransitive.equals( "true" );
     }
 
     /**
