@@ -200,7 +200,7 @@ public class EffectiveModelBuilder
         throws ArtifactResolutionException, ArtifactDescriptorException, ModelBuildingException
 
     {
-        Log.getLog().debug( "Resolving remote POM: " + gav );
+        Log.getLog().debug( "Resolving remote plugin management POM: " + gav );
 
         Artifact artifact = resolvePom( gav );
 

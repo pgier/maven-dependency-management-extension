@@ -181,9 +181,10 @@ public class DepVersionOverrider
             String groupIdArtifactId = dependency.getGroupId() + GAV_SEPERATOR + dependency.getArtifactId();
             if ( overrides.containsKey( groupIdArtifactId ) )
             {
-                String artifactVersion = overrides.get( groupIdArtifactId );
-                dependency.setVersion( artifactVersion );
-                Log.getLog().debug( "Altered dependency: " + groupIdArtifactId + "=" + artifactVersion );
+                String oldVersion = dependency.getVersion();
+                String overrideVersion = overrides.get( groupIdArtifactId );
+                dependency.setVersion( overrideVersion );
+                Log.getLog().debug( "Altered dependency " + groupIdArtifactId + " " + oldVersion + "->" + overrideVersion );
                 nonMatchingVersionOverrides.remove( groupIdArtifactId );
             }
         }
