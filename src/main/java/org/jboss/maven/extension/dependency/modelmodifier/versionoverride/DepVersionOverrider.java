@@ -15,10 +15,13 @@
  */
 package org.jboss.maven.extension.dependency.modelmodifier.versionoverride;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
@@ -67,6 +70,12 @@ public class DepVersionOverrider
     private Map<String, String> dependencyVersionOverrides;
 
     /**
+     * The set of projects currently in the reactor.  The versions
+     * of these projects should not be overridden.
+     */
+    private Set<String> reactorProjects;
+
+    /**
      * Modify model's dependency management and direct dependencies.
      */
     @Override
@@ -89,7 +98,7 @@ public class DepVersionOverrider
 
         // Apply overrides to project dependency management
         List<Dependency> dependencies = dependencyManagement.getDependencies();
-        Map<String, String> nonMatchingVersionOverrides = applyOverrides( dependencies, versionOverrides );
+        Map<String, String> nonMatchingVersionOverrides = applyOverrides( dependencies, versionOverrides, getReactorProjects() );
         if ( overrideTransitive() )
         {
             // Add dependencies to Dependency Management which did not match any existing dependency
@@ -116,13 +125,23 @@ public class DepVersionOverrider
 
         // Apply overrides to project direct dependencies
         List<Dependency> projectDependencies = model.getDependencies();
-        applyOverrides( projectDependencies, versionOverrides );
+        applyOverrides( projectDependencies, versionOverrides, getReactorProjects() );
 
         // Include the overrides in the built files for repeatability
         writeOverrideMap( model, getName(), versionOverrides );
 
         // Assuming the Model changed since overrides were given
         return true;
+    }
+
+    private Set<String> getReactorProjects()
+    {
+        if ( reactorProjects == null || reactorProjects.size() == 0 )
+        {
+            String[] reactorProjectGAs = System.getProperty( "reactorProjectGAs" ).split( "," );
+            reactorProjects = new HashSet<String>( Arrays.asList( reactorProjectGAs ) );
+        }
+        return reactorProjects;
     }
 
     @Override
@@ -171,6 +190,20 @@ public class DepVersionOverrider
      */
     private static Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides )
     {
+        Set<String> excludes = new HashSet<String>();
+        return applyOverrides(dependencies, overrides, excludes);
+    }
+   
+    /**
+     * Apply a set of version overrides to a list of dependencies. Return a set of the overrides which were not applied.
+     * 
+     * @param dependencies The list of dependencies
+     * @param overrides The map of dependency version overrides
+     * @param excludes A set of GAs to ignore when overridding dep versions
+     * @return The map of overrides that were not matched in the dependencies
+     */
+    private static Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides, Set<String> excludes )
+    {
         // Duplicate the override map so unused overrides can be easily recorded
         Map<String, String> nonMatchingVersionOverrides = new HashMap<String, String>();
         nonMatchingVersionOverrides.putAll( overrides );
@@ -179,7 +212,7 @@ public class DepVersionOverrider
         for ( Dependency dependency : dependencies )
         {
             String groupIdArtifactId = dependency.getGroupId() + GAV_SEPERATOR + dependency.getArtifactId();
-            if ( overrides.containsKey( groupIdArtifactId ) )
+            if ( overrides.containsKey( groupIdArtifactId ) && !excludes.contains( groupIdArtifactId ) )
             {
                 String oldVersion = dependency.getVersion();
                 String overrideVersion = overrides.get( groupIdArtifactId );

@@ -123,6 +123,15 @@ public class DependencyManagementLifecycleParticipant
             logger.error( "EffectiveModelBuilder init produced a plexus container error: " + e );
         }
 
+        // The dependency management overrider needs to know which projects
+        // are in the reactor, and therefore should not be overridden.
+        StringBuilder reactorProjects = new StringBuilder();
+        for ( MavenProject project : session.getProjects() )
+        {
+            reactorProjects.append( project.getGroupId() + ":" + project.getArtifactId() + "," );
+        }
+        System.setProperty( "reactorProjectGAs",  reactorProjects.toString() );
+
         // Apply model modifiers to the projects' models
         for ( MavenProject project : session.getProjects() )
         {
