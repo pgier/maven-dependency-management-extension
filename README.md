@@ -77,3 +77,25 @@ The following command runs the integration tests as part of the build
 
     mvn install -Prun-its
 
+
+## Known Issues
+
+### Plugin Extensions
+
+The plugin management feature will override plugin versions, but this will not work on plugins which are 
+configured as build extensions.
+
+    <extensions>true</extensions>
+
+These plugins are loaded early in the build lifecycle, before the dependency management extension takes effect.
+
+
+### Intermodule dependencies
+
+It is common in a multi-module Maven build that one module has a dependency on another module.  If the remote
+dependency management pom contains overrides for the modules of the current project,  Maven will attempt
+to use the override versions instead of the local versions.  In version 1.0.1 of this extension, a change was made
+to cause the overrides to ignore dependencies that are in the current reactor, however this problem could still
+occur when attempting to build a single module of a multi-module build. 
+
+
