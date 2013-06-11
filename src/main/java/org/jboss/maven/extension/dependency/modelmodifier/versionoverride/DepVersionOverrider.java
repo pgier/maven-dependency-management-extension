@@ -98,7 +98,7 @@ public class DepVersionOverrider
 
         // Apply overrides to project dependency management
         List<Dependency> dependencies = dependencyManagement.getDependencies();
-        Map<String, String> nonMatchingVersionOverrides = applyOverrides( dependencies, versionOverrides, getReactorProjects() );
+        Map<String, String> nonMatchingVersionOverrides = applyOverrides( dependencies, versionOverrides );
         if ( overrideTransitive() )
         {
             // Add dependencies to Dependency Management which did not match any existing dependency
@@ -125,7 +125,7 @@ public class DepVersionOverrider
 
         // Apply overrides to project direct dependencies
         List<Dependency> projectDependencies = model.getDependencies();
-        applyOverrides( projectDependencies, versionOverrides, getReactorProjects() );
+        applyOverrides( projectDependencies, versionOverrides );
 
         // Include the overrides in the built files for repeatability
         writeOverrideMap( model, getName(), versionOverrides );
@@ -177,6 +177,13 @@ public class DepVersionOverrider
             Map<String, String> propDepOverrides =
                 VersionPropertyReader.getPropertiesByPrefix( DEPENDENCY_VERSION_OVERRIDE_PREFIX );
             dependencyVersionOverrides.putAll( propDepOverrides );
+
+            // Never override projects in the current reactor
+            Set<String> reactorProjects = this.getReactorProjects();
+            for ( String reactorGA : reactorProjects )
+            {
+                dependencyVersionOverrides.remove( reactorGA );
+            }
         }
         return dependencyVersionOverrides;
     }
@@ -205,8 +212,8 @@ public class DepVersionOverrider
     private static Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides, Set<String> excludes )
     {
         // Duplicate the override map so unused overrides can be easily recorded
-        Map<String, String> nonMatchingVersionOverrides = new HashMap<String, String>();
-        nonMatchingVersionOverrides.putAll( overrides );
+        Map<String, String> unmatchedVersionOverrides = new HashMap<String, String>();
+        unmatchedVersionOverrides.putAll( overrides );
 
         // Apply matching overrides to dependencies
         for ( Dependency dependency : dependencies )
@@ -218,11 +225,11 @@ public class DepVersionOverrider
                 String overrideVersion = overrides.get( groupIdArtifactId );
                 dependency.setVersion( overrideVersion );
                 Log.getLog().debug( "Altered dependency " + groupIdArtifactId + " " + oldVersion + "->" + overrideVersion );
-                nonMatchingVersionOverrides.remove( groupIdArtifactId );
+                unmatchedVersionOverrides.remove( groupIdArtifactId );
             }
         }
 
-        return nonMatchingVersionOverrides;
+        return unmatchedVersionOverrides;
     }
 
     /**
