@@ -46,6 +46,25 @@ transitive dependencies, as well as those specified directly in the pom.  If tra
 
 Multiple remote dependency management poms can be specified using a comma separated list of GAVs (groupId, artifactId, version).
 
+
+### Overriding dependency versions of a specific module
+
+In a multi-module build it is considered good practice to coordinate dependency version among
+the modules using dependency management.  In other words, if module A and B both use dependency X, 
+both modules should use the same version of dependency X.  Therefore, the default behaviour of this
+extension is to use a single set of dependency versions applied to all modules.
+
+However, there are certain cases where it is useful to use different versions of the same dependency
+in different modules.  For example, if the project includes integration code for multiple 
+versions of a particular API.  In that case, it is possible to apply a version override to 
+a specific module of a multi-module build.
+
+    mvn install -Dversion:<groupId>:<artifactId>@<moduleGroupId>:<moduleArtifactId>=<version>
+
+For example to apply a dependency override only to module B of project foo.
+
+    mvn install -Dversion:junit:junit@org.foo:moduleB=4.10
+
 ### Overriding plugin versions
 
 Plugin versions can be overridden in the pom using a similar pattern to dependencies with the format "pluginVersion:<groupId>:<artifactId>=<version>".
@@ -57,7 +76,6 @@ To override more than one Maven plugin version, multple override properties can 
     mvn install -DpluginManagement=org.jboss:jboss-parent:10
 
 This will apply all <pluginManagement/> versions from the remote pom, to the local pom.
-
 
 ## Building from source
 
