@@ -78,7 +78,7 @@ The following command runs the integration tests as part of the build
     mvn install -Prun-its
 
 
-## Known Issues
+## Known Issues/Limitations
 
 ### Plugin Extensions
 
@@ -98,4 +98,9 @@ to use the override versions instead of the local versions.  In version 1.0.1 of
 to cause the overrides to ignore dependencies that are in the current reactor, however this problem could still
 occur when attempting to build a single module of a multi-module build. 
 
+### Multiple versions of a single dependency
+
+Some complex projects use more than one version of a single dependency across different modules.  For example,
+this could be useful in testing compatibility between multiple versions of an API.  This extension does not
+currently allow multiple versions to be used for a single dependency.
 
