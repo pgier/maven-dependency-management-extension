@@ -89,6 +89,11 @@ configured as build extensions.
 
 These plugins are loaded early in the build lifecycle, before the dependency management extension takes effect.
 
+### Plugin Dependencies
+
+Some Maven builds configure a plugin with additional dependencies.  This is common in the 
+maven-antrun-plugin for example when using non-default tasks/features of Ant.  This extension does not 
+currently allow these dependencies to be overridden from the command line.
 
 ### Intermodule dependencies
 
