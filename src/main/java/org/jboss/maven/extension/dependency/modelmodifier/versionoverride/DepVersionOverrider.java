@@ -70,8 +70,7 @@ public class DepVersionOverrider
     private Map<String, String> dependencyVersionOverrides;
 
     /**
-     * The set of projects currently in the reactor.  The versions
-     * of these projects should not be overridden.
+     * The set of projects currently in the reactor. The versions of these projects should not be overridden.
      */
     private Set<String> reactorProjects;
 
@@ -86,6 +85,12 @@ public class DepVersionOverrider
         {
             return false;
         }
+
+        versionOverrides = removeReactorGAs( versionOverrides );
+
+        String projectGA = model.getGroupId() + ":" + model.getArtifactId();
+
+        versionOverrides = applyModuleVersionOverrides( projectGA, versionOverrides );
 
         // If the model doesn't have any Dependency Management set by default, create one for it
         DependencyManagement dependencyManagement = model.getDependencyManagement();
@@ -163,7 +168,8 @@ public class DepVersionOverrider
     }
 
     /**
-     * Get the set of versions which will be used to override local dependency versions.
+     * Get the set of versions which will be used to override local dependency versions. This is the full set of version
+     * overrides from system properties and remote poms.
      */
     private Map<String, String> getVersionOverrides()
     {
@@ -178,14 +184,53 @@ public class DepVersionOverrider
                 VersionPropertyReader.getPropertiesByPrefix( DEPENDENCY_VERSION_OVERRIDE_PREFIX );
             dependencyVersionOverrides.putAll( propDepOverrides );
 
-            // Never override projects in the current reactor
-            Set<String> reactorProjects = this.getReactorProjects();
-            for ( String reactorGA : reactorProjects )
-            {
-                dependencyVersionOverrides.remove( reactorGA );
-            }
         }
         return dependencyVersionOverrides;
+    }
+
+    /**
+     * Remove version overrides which refer to projects in the current reactor
+     * 
+     * @param versionOverrides
+     * @return A new Map with the reactor GAs removed.
+     */
+    private Map<String, String> removeReactorGAs( Map<String, String> versionOverrides )
+    {
+        Map<String, String> reducedVersionOverrides = new HashMap<String, String>( versionOverrides );
+        Set<String> reactorProjects = getReactorProjects();
+        for ( String reactorGA : reactorProjects )
+        {
+            reducedVersionOverrides.remove( reactorGA );
+        }
+        return reducedVersionOverrides;
+    }
+
+    /**
+     * Apply version overrides which are module specific. Searches the full list of version overrides for any keys which
+     * contain the '@' symbol Removes these from the version overrides list, and returns them in a new map organized by
+     * the module.
+     * 
+     * @param versionOverides The full list of version overrides, both global and module specific
+     * @return The map of modules to the module overrides
+     */
+    private Map<String, String> applyModuleVersionOverrides( String projectGA, Map<String, String> versionOverrides )
+    {
+        Map<String, String> moduleVersionOverrides = new HashMap<String, String>( versionOverrides );
+        for ( String currentKey : versionOverrides.keySet() )
+        {
+            if ( currentKey.contains( "@" ) )
+            {
+                moduleVersionOverrides.remove( currentKey );
+                String[] artifactAndModule = currentKey.split( "@" );
+                String artifactGA = artifactAndModule[0];
+                String module = artifactAndModule[1];
+                if ( module.equals( projectGA ) )
+                {
+                    moduleVersionOverrides.put( artifactGA, versionOverrides.get( currentKey ) );
+                }
+            }
+        }
+        return moduleVersionOverrides;
     }
 
     /**
@@ -198,9 +243,9 @@ public class DepVersionOverrider
     private static Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides )
     {
         Set<String> excludes = new HashSet<String>();
-        return applyOverrides(dependencies, overrides, excludes);
+        return applyOverrides( dependencies, overrides, excludes );
     }
-   
+
     /**
      * Apply a set of version overrides to a list of dependencies. Return a set of the overrides which were not applied.
      * 
@@ -209,7 +254,8 @@ public class DepVersionOverrider
      * @param excludes A set of GAs to ignore when overridding dep versions
      * @return The map of overrides that were not matched in the dependencies
      */
-    private static Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides, Set<String> excludes )
+    private static Map<String, String> applyOverrides( List<Dependency> dependencies, Map<String, String> overrides,
+                                                       Set<String> excludes )
     {
         // Duplicate the override map so unused overrides can be easily recorded
         Map<String, String> unmatchedVersionOverrides = new HashMap<String, String>();
@@ -224,7 +270,8 @@ public class DepVersionOverrider
                 String oldVersion = dependency.getVersion();
                 String overrideVersion = overrides.get( groupIdArtifactId );
                 dependency.setVersion( overrideVersion );
-                Log.getLog().debug( "Altered dependency " + groupIdArtifactId + " " + oldVersion + "->" + overrideVersion );
+                Log.getLog().debug( "Altered dependency " + groupIdArtifactId + " " + oldVersion + "->" +
+                                        overrideVersion );
                 unmatchedVersionOverrides.remove( groupIdArtifactId );
             }
         }
