@@ -283,7 +283,7 @@ public class EffectiveModelBuilder
     /**
      * Resolve the pom file for a given GAV
      * 
-     * @param gav
+     * @param gav must be in the format groupId:artifactId:version
      * @return The resolved pom artifact
      * @throws ArtifactResolutionException
      */

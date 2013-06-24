@@ -25,6 +25,7 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginManagement;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.jboss.maven.extension.dependency.resolver.EffectiveModelBuilder;
+import org.jboss.maven.extension.dependency.util.MavenUtil;
 import org.jboss.maven.extension.dependency.util.VersionPropertyReader;
 import org.jboss.maven.extension.dependency.util.log.Log;
 import org.sonatype.aether.resolution.ArtifactDescriptorException;
@@ -106,8 +107,8 @@ public class PluginVersionOverrider
         {
             pluginVersionOverrides = new HashMap<String, String>();
 
-            Map<String, String> remoteDepOverrides = loadRemotePluginVersionOverrides();
-            pluginVersionOverrides.putAll( remoteDepOverrides );
+            Map<String, String> remotePluginOverrides = loadRemotePluginVersionOverrides();
+            pluginVersionOverrides.putAll( remotePluginOverrides );
 
             Map<String, String> propPluginOverrides =
                 VersionPropertyReader.getPropertiesByPrefix( PLUGIN_VERSION_OVERRIDE_PREFIX );
@@ -139,7 +140,8 @@ public class PluginVersionOverrider
     /**
      * Get plugin management version properties from a remote POM
      * 
-     * @return Map between the GA of the plugin and the version of the plugin.
+     * @return Map between the GA of the plugin and the version of the plugin. If the system property is not set,
+     *         returns an empty map.
      */
     private static Map<String, String> loadRemotePluginVersionOverrides()
     {
@@ -148,25 +150,32 @@ public class PluginVersionOverrider
 
         Map<String, String> versionOverrides = new HashMap<String, String>( 0 );
 
-        if ( pluginMgmtPomGAV != null )
+        if ( pluginMgmtPomGAV == null )
         {
-            try
-            {
-                EffectiveModelBuilder resolver = EffectiveModelBuilder.getInstance();
-                versionOverrides = resolver.getRemotePluginVersionOverrides( pluginMgmtPomGAV );
-            }
-            catch ( ArtifactResolutionException e )
-            {
-                Log.getLog().warn( "Unable to resolve remote pom: " + e );
-            }
-            catch ( ArtifactDescriptorException e )
-            {
-                Log.getLog().warn( "Unable to resolve remote pom: " + e );
-            }
-            catch ( ModelBuildingException e )
-            {
-                Log.getLog().warn( "Unable to resolve remote pom: " + e );
-            }
+            return versionOverrides;
+        }
+
+        if ( !MavenUtil.validGav( pluginMgmtPomGAV ))
+        {
+            Log.getLog().warn( "Skipping invalid plugin management GAV: " + pluginMgmtPomGAV );
+            return versionOverrides;
+        }
+        try
+        {
+            EffectiveModelBuilder resolver = EffectiveModelBuilder.getInstance();
+            versionOverrides = resolver.getRemotePluginVersionOverrides( pluginMgmtPomGAV );
+        }
+        catch ( ArtifactResolutionException e )
+        {
+            Log.getLog().warn( "Unable to resolve remote pom: " + e );
+        }
+        catch ( ArtifactDescriptorException e )
+        {
+            Log.getLog().warn( "Unable to resolve remote pom: " + e );
+        }
+        catch ( ModelBuildingException e )
+        {
+            Log.getLog().warn( "Unable to resolve remote pom: " + e );
         }
 
         return versionOverrides;
