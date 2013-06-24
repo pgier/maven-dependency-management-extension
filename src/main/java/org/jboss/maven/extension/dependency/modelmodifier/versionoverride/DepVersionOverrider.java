@@ -287,28 +287,35 @@ public class DepVersionOverrider
     private static Map<String, String> loadRemoteDepVersionOverrides()
     {
         Properties systemProperties = System.getProperties();
-        String depMgmtPomGAV = systemProperties.getProperty( DEPENDENCY_MANAGEMENT_POM_PROPERTY );
+        String depMgmtPomCSV = systemProperties.getProperty( DEPENDENCY_MANAGEMENT_POM_PROPERTY );
 
         Map<String, String> versionOverrides = new HashMap<String, String>( 0 );
 
-        if ( depMgmtPomGAV != null )
+        if ( depMgmtPomCSV != null )
         {
-            try
+            String [] depMgmtPomGAVs = depMgmtPomCSV.split( "," );
+
+            // Iterate in reverse order so that the first GAV in the list overwrites the last
+            for ( int i = ( depMgmtPomGAVs.length - 1 ); i > -1; --i )
             {
-                EffectiveModelBuilder resolver = EffectiveModelBuilder.getInstance();
-                versionOverrides = resolver.getRemoteDependencyVersionOverrides( depMgmtPomGAV );
-            }
-            catch ( ArtifactResolutionException e )
-            {
-                Log.getLog().warn( "Unable to resolve remote pom: " + e );
-            }
-            catch ( ArtifactDescriptorException e )
-            {
-                Log.getLog().warn( "Unable to resolve remote pom: " + e );
-            }
-            catch ( ModelBuildingException e )
-            {
-                Log.getLog().warn( "Unable to resolve remote pom: " + e );
+                String nextGAV = depMgmtPomGAVs[i];
+                try
+                {
+                    EffectiveModelBuilder resolver = EffectiveModelBuilder.getInstance();
+                    versionOverrides.putAll( resolver.getRemoteDependencyVersionOverrides( nextGAV ) );
+                }
+                catch ( ArtifactResolutionException e )
+                {
+                    Log.getLog().warn( "Unable to resolve remote pom: " + e );
+                }
+                catch ( ArtifactDescriptorException e )
+                {
+                    Log.getLog().warn( "Unable to resolve remote pom: " + e );
+                }
+                catch ( ModelBuildingException e )
+                {
+                    Log.getLog().warn( "Unable to resolve remote pom: " + e );
+                }
             }
         }
 

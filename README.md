@@ -57,7 +57,12 @@ transitive dependencies, as well as those specified directly in the pom.  If tra
 
     mvn install -DdependencyManagement=org.foo:my-dep-pom:1.0 -DoverrideTransitive=false
 
-Multiple remote dependency management poms can be specified using a comma separated list of GAVs (groupId, artifactId, version).
+As of version 1.1.0, multiple remote dependency management poms can be specified using a comma separated list of GAVs (groupId, artifactId, version).
+The poms are specified in order of priority, so if the remote boms contain some of the same dependencies,
+the versions listed in the first bom in the list will be used.
+
+    mvn install -DdependencyManagement=org.foo:my-dep-pom:1.0,org.bar:my-dep-pom:2.0
+
 
 
 ### Overriding dependency versions of a specific module

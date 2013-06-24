@@ -161,7 +161,7 @@ public class EffectiveModelBuilder
     {
         Map<String, String> versionOverrides = new HashMap<String, String>();
 
-        Log.getLog().debug( "resolving gav: " + gav );
+        Log.getLog().debug( "Resolving dependency management GAV: " + gav );
         Artifact artifact = resolvePom( gav );
 
         ModelResolver modelResolver = this.newModelResolver();
