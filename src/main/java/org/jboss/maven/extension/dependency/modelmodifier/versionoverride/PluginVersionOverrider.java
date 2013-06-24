@@ -25,9 +25,9 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginManagement;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.jboss.maven.extension.dependency.resolver.EffectiveModelBuilder;
+import org.jboss.maven.extension.dependency.util.Log;
 import org.jboss.maven.extension.dependency.util.MavenUtil;
 import org.jboss.maven.extension.dependency.util.VersionPropertyReader;
-import org.jboss.maven.extension.dependency.util.log.Log;
 import org.sonatype.aether.resolution.ArtifactDescriptorException;
 import org.sonatype.aether.resolution.ArtifactResolutionException;
 

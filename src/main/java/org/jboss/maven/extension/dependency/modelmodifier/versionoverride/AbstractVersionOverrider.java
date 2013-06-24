@@ -20,9 +20,9 @@ import java.util.Map;
 
 import org.apache.maven.model.Model;
 import org.jboss.maven.extension.dependency.metainf.MetaInfWriter;
-import org.jboss.maven.extension.dependency.metainf.generator.OverridePropertiesGenerator;
+import org.jboss.maven.extension.dependency.metainf.OverridePropertiesGenerator;
 import org.jboss.maven.extension.dependency.modelmodifier.ModelModifier;
-import org.jboss.maven.extension.dependency.util.log.Log;
+import org.jboss.maven.extension.dependency.util.Log;
 
 /**
  * Abstract class that provides fields and methods common to classes that need to override versions by groupID and

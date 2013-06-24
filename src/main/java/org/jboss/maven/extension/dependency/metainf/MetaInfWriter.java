@@ -23,8 +23,7 @@ import java.security.SecureRandom;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Resource;
 import org.codehaus.plexus.logging.Logger;
-import org.jboss.maven.extension.dependency.metainf.generator.MetaInfGenerator;
-import org.jboss.maven.extension.dependency.util.log.Log;
+import org.jboss.maven.extension.dependency.util.Log;
 
 /**
  * This class writes out metainf resources to be included with the jar at META-INF/maven/group/project/

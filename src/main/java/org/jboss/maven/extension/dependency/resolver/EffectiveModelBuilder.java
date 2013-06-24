@@ -34,7 +34,7 @@ import org.apache.maven.model.resolution.ModelResolver;
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.jboss.maven.extension.dependency.util.log.Log;
+import org.jboss.maven.extension.dependency.util.Log;
 import org.sonatype.aether.RepositorySystem;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.artifact.Artifact;

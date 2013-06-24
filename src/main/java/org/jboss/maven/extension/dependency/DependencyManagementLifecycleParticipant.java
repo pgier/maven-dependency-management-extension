@@ -33,13 +33,13 @@ import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.IOUtil;
+import org.jboss.maven.extension.dependency.metainf.EffectivePomGenerator;
 import org.jboss.maven.extension.dependency.metainf.MetaInfWriter;
-import org.jboss.maven.extension.dependency.metainf.generator.EffectivePomGenerator;
 import org.jboss.maven.extension.dependency.modelmodifier.ModelModifier;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.DepVersionOverrider;
 import org.jboss.maven.extension.dependency.modelmodifier.versionoverride.PluginVersionOverrider;
 import org.jboss.maven.extension.dependency.resolver.EffectiveModelBuilder;
-import org.jboss.maven.extension.dependency.util.log.Log;
+import org.jboss.maven.extension.dependency.util.Log;
 import org.sonatype.aether.impl.ArtifactResolver;
 
 /**
