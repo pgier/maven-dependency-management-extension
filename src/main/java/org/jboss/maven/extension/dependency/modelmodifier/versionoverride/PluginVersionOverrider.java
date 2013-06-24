@@ -146,38 +146,45 @@ public class PluginVersionOverrider
     private static Map<String, String> loadRemotePluginVersionOverrides()
     {
         Properties systemProperties = System.getProperties();
-        String pluginMgmtPomGAV = systemProperties.getProperty( PLUGIN_MANAGEMENT_POM_PROPERTY );
+        String pluginMgmtCSV = systemProperties.getProperty( PLUGIN_MANAGEMENT_POM_PROPERTY );
 
         Map<String, String> versionOverrides = new HashMap<String, String>( 0 );
 
-        if ( pluginMgmtPomGAV == null )
+        if ( pluginMgmtCSV == null )
         {
             return versionOverrides;
         }
 
-        if ( !MavenUtil.validGav( pluginMgmtPomGAV ))
-        {
-            Log.getLog().warn( "Skipping invalid plugin management GAV: " + pluginMgmtPomGAV );
-            return versionOverrides;
-        }
-        try
-        {
-            EffectiveModelBuilder resolver = EffectiveModelBuilder.getInstance();
-            versionOverrides = resolver.getRemotePluginVersionOverrides( pluginMgmtPomGAV );
-        }
-        catch ( ArtifactResolutionException e )
-        {
-            Log.getLog().warn( "Unable to resolve remote pom: " + e );
-        }
-        catch ( ArtifactDescriptorException e )
-        {
-            Log.getLog().warn( "Unable to resolve remote pom: " + e );
-        }
-        catch ( ModelBuildingException e )
-        {
-            Log.getLog().warn( "Unable to resolve remote pom: " + e );
-        }
+        String[] pluginMgmtPomGAVs = pluginMgmtCSV.split( "," );
 
+        // Iterate in reverse order so that the first GAV in the list overwrites the last
+        for ( int i = ( pluginMgmtPomGAVs.length - 1 ); i > -1; --i )
+        {
+            String nextGAV = pluginMgmtPomGAVs[i];
+
+            if ( !MavenUtil.validGav( nextGAV ) )
+            {
+                Log.getLog().warn( "Skipping invalid plugin management GAV: " + nextGAV );
+                continue;
+            }
+            try
+            {
+                EffectiveModelBuilder resolver = EffectiveModelBuilder.getInstance();
+                versionOverrides.putAll( resolver.getRemotePluginVersionOverrides( nextGAV ) );
+            }
+            catch ( ArtifactResolutionException e )
+            {
+                Log.getLog().warn( "Unable to resolve remote pom: " + e );
+            }
+            catch ( ArtifactDescriptorException e )
+            {
+                Log.getLog().warn( "Unable to resolve remote pom: " + e );
+            }
+            catch ( ModelBuildingException e )
+            {
+                Log.getLog().warn( "Unable to resolve remote pom: " + e );
+            }
+        }
         return versionOverrides;
     }
 }

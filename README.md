@@ -94,6 +94,10 @@ To override more than one Maven plugin version, multple override properties can 
     mvn install -DpluginManagement=org.jboss:jboss-parent:10
 
 This will apply all <pluginManagement/> versions from the remote pom, to the local pom.
+Multiple remote plugin management poms can be specified on the command line using a comma separated
+list of GAVs.  The first pom specified will be given the highest priority if conflicts occur.
+
+    mvn install -DpluginManagement=org.company:pluginMgrA:1.0,org.company:pluginMgrB:2.0
 
 ## Building from source
 

@@ -306,7 +306,7 @@ public class DepVersionOverrider
             String nextGAV = depMgmtPomGAVs[i];
             if ( !MavenUtil.validGav( nextGAV ) )
             {
-                Log.getLog().warn( "Skipping invalid GAV: " + nextGAV );
+                Log.getLog().warn( "Skipping invalid dependency management GAV: " + nextGAV );
                 continue;
             }
             try
