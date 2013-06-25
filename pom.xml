@@ -198,7 +198,24 @@
             <version>1.8</version>
             <executions>
               <execution>
-                <id>integration-test</id>
+                <id>integration-tests-pom-ext</id>
+                <goals>
+                  <goal>install</goal>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <cloneProjectsTo>${project.build.directory}/it-pom-ext</cloneProjectsTo>
+                  <localRepositoryPath>${project.build.directory}/local-repo-pom-ext</localRepositoryPath>
+                  <pomIncludes>
+                    <pomInclude>*-pom-ext/pom.xml</pomInclude>
+                  </pomIncludes>
+                  <projectsDirectory>src/it</projectsDirectory>
+                  <postBuildHookScript>verify</postBuildHookScript>
+                  <settingsFile>src/it/settings.xml</settingsFile>
+                </configuration>
+              </execution>
+              <execution>
+                <id>integration-test-lib-ext</id>
                 <goals>
                   <goal>run</goal>
                 </goals>
@@ -217,6 +234,9 @@
                   <pomIncludes>
                     <pomInclude>*/pom.xml</pomInclude>
                   </pomIncludes>
+                  <pomExcludes>
+                    <pomExclude>*-pom-ext/pom.xml</pomExclude>
+                  </pomExcludes>
                   <projectsDirectory>src/it</projectsDirectory>
                   <postBuildHookScript>verify</postBuildHookScript>
                   <settingsFile>src/it/settings.xml</settingsFile>
