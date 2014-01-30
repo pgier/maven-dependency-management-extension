@@ -99,6 +99,24 @@ list of GAVs.  The first pom specified will be given the highest priority if con
 
     mvn install -DpluginManagement=org.company:pluginMgrA:1.0,org.company:pluginMgrB:2.0
 
+
+## Using Dependency Properties
+
+The extension will automatically set properties which match the version overrides.  These properties
+can be used, for example, in resource filtering in the build.  By default the extension
+will set a property following the format "version:<groupId>:<artifactId>=<version>" for
+each overridden dependency.  The format of this property can be customized using command line
+system properties.
+
+    versionPropertyPrefix - Defaults to "version:"
+    versionPropertyGASeparator - Defaults to ":"
+    versionPropertySuffix - Defaults to empty string ""
+
+For example, the version property format could be set to "my.<groupId>_<artifactId>.version=<version>"
+
+    mvn install -DversionPropertyPrefix="my." -DversionPropertyGASeparator="_" -DversionPropertySuffix=".version"
+
+
 ## Building from source
 
 You must have Maven 3 or higher installed to build the extension.  The source repository can be downloaded from github.

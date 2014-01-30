@@ -92,6 +92,9 @@ public class DepVersionOverrider
         String projectGA = model.getGroupId() + ":" + model.getArtifactId();
 
         versionOverrides = applyModuleVersionOverrides( projectGA, versionOverrides );
+        
+        // Add/override a property to the build for each override
+        addVersionOverrideProperties( versionOverrides, model.getProperties() );
 
         // If the model doesn't have any Dependency Management set by default, create one for it
         DependencyManagement dependencyManagement = model.getDependencyManagement();
@@ -237,6 +240,50 @@ public class DepVersionOverrider
             }
         }
         return moduleVersionOverrides;
+    }
+
+    /***
+     * Add properties to the build which match the version overrides.
+     * The property names are in the format
+     */
+    private void addVersionOverrideProperties( Map<String, String> overrides, Properties props )
+    {
+        String propPrefix = getVersionPropertyPrefix();
+        String gaSeparator = getGASeparator();
+        String propSuffix = getVersionPropertySuffix();
+        
+        for (String currentGA : overrides.keySet() )
+        {
+            String versionPropName = propPrefix + currentGA.replace( ":", gaSeparator ) + propSuffix;
+            props.setProperty( versionPropName, overrides.get( currentGA ) );
+        }
+    }
+
+    /**
+     * Get the prefix that should be used for version property names
+     * @return The prefix set in the system properties or the defult DEPENDENCY_VERSION_OVERRIDE_PREFIX
+     */
+    private String getVersionPropertyPrefix()
+    {
+        return System.getProperty( "versionPropertyPrefix", DEPENDENCY_VERSION_OVERRIDE_PREFIX);
+    }
+
+    /**
+     * Get the groupId/artifactId separator
+     * @return The separator set in the system properties, or ":" by default
+     */
+    private String getGASeparator()
+    {
+        return System.getProperty( "versionPropertyGASeparator", ":" );
+    }
+
+    /**
+     * Get the suffix that should be used for version property names
+     * @return The suffix set in the system properties or the default empty string
+     */
+    private String getVersionPropertySuffix()
+    {
+        return System.getProperty( "versionPropertySuffix", "");
     }
 
     /**
