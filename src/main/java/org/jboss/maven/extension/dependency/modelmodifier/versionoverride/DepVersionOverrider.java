@@ -171,6 +171,9 @@ public class DepVersionOverrider
     /**
      * Get the set of versions which will be used to override local dependency versions. This is the full set of version
      * overrides from system properties and remote poms.
+     * 
+     * The format of the key is "groupId:artifactId[@moduleGroupId:moduleArtifactId]"
+     * The value is the version string
      */
     private Map<String, String> getVersionOverrides()
     {
@@ -190,7 +193,9 @@ public class DepVersionOverrider
     }
 
     /**
-     * Remove version overrides which refer to projects in the current reactor
+     * Remove version overrides which refer to projects in the current reactor.
+     * Projects in the reactor include things like inter-module dependencies
+     * which should never be overridden.
      * 
      * @param versionOverrides
      * @return A new Map with the reactor GAs removed.
@@ -207,12 +212,12 @@ public class DepVersionOverrider
     }
 
     /**
-     * Apply version overrides which are module specific. Searches the full list of version overrides for any keys which
-     * contain the '@' symbol Removes these from the version overrides list, and returns them in a new map organized by
-     * the module.
+     * Remove module overrides which do not apply to the current module. Searches the full list of version overrides 
+     * for any keys which contain the '@' symbol.  Removes these from the version overrides list, and add them back
+     * without the '@' symbol only if they apply to the current module.
      * 
      * @param versionOverides The full list of version overrides, both global and module specific
-     * @return The map of modules to the module overrides
+     * @return The map of global and module specific overrides which apply to the given module
      */
     private Map<String, String> applyModuleVersionOverrides( String projectGA, Map<String, String> versionOverrides )
     {
@@ -224,8 +229,8 @@ public class DepVersionOverrider
                 moduleVersionOverrides.remove( currentKey );
                 String[] artifactAndModule = currentKey.split( "@" );
                 String artifactGA = artifactAndModule[0];
-                String module = artifactAndModule[1];
-                if ( module.equals( projectGA ) )
+                String moduleGA = artifactAndModule[1];
+                if ( moduleGA.equals( projectGA ) )
                 {
                     moduleVersionOverrides.put( artifactGA, versionOverrides.get( currentKey ) );
                 }
