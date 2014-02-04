@@ -36,7 +36,7 @@ Dependency and plugin versions are overridden using command line system properti
 
 ### Overriding dependency versions
 
-The version of a specific dependency can be overridden using a command line property of the form "version:<groupId>:<artifactId>=<version>".
+The version of a specific dependency can be overridden using a command line property of the form "version:[groupId]:[artifactId]=[version]".
 
 For example, the version of **junit** can be set to **4.10** using a command line property.
 
@@ -51,7 +51,7 @@ dependencies from another project, a remote dependency management pom can be spe
 
     mvn install -DdependencyManagement=org.foo:my-dep-pom:1.0
 
-This has the effect of taking the <dependencyManagement/> from the remote pom, and applying the dependency versions to the current build.
+This has the effect of taking the &lt;dependencyManagement/&gt; from the remote pom, and applying the dependency versions to the current build.
 By default, all dependencies listed in the remote pom will be added to the current build.  This has the effect of overriding matching 
 transitive dependencies, as well as those specified directly in the pom.  If transitive dependencies should not be overridden, the option "overrideTransitive" can be set to false.
 
@@ -77,7 +77,7 @@ in different modules.  For example, if the project includes integration code for
 versions of a particular API.  In that case, it is possible to apply a version override to 
 a specific module of a multi-module build.
 
-    mvn install -Dversion:<groupId>:<artifactId>@<moduleGroupId>:<moduleArtifactId>=<version>
+    mvn install -Dversion:[groupId]:[artifactId]@[moduleGroupId]:[moduleArtifactId]=[version]
 
 For example to apply a dependency override only to module B of project foo.
 
@@ -85,7 +85,7 @@ For example to apply a dependency override only to module B of project foo.
 
 ### Overriding plugin versions
 
-Plugin versions can be overridden in the pom using a similar pattern to dependencies with the format "pluginVersion:<groupId>:<artifactId>=<version>".
+Plugin versions can be overridden in the pom using a similar pattern to dependencies with the format "pluginVersion:[groupId]:[artifactId]=[version]".
 
     mvn install -DpluginVersion:org.apache.maven.plugins:maven-compiler-plugin=3.0
 
@@ -93,7 +93,7 @@ To override more than one Maven plugin version, multple override properties can 
 
     mvn install -DpluginManagement=org.jboss:jboss-parent:10
 
-This will apply all <pluginManagement/> versions from the remote pom, to the local pom.
+This will apply all &lt;pluginManagement/&gt; versions from the remote pom, to the local pom.
 Multiple remote plugin management poms can be specified on the command line using a comma separated
 list of GAVs.  The first pom specified will be given the highest priority if conflicts occur.
 
@@ -104,7 +104,7 @@ list of GAVs.  The first pom specified will be given the highest priority if con
 
 The extension will automatically set properties which match the version overrides.  These properties
 can be used, for example, in resource filtering in the build.  By default the extension
-will set a property following the format "version:<groupId>:<artifactId>=<version>" for
+will set a property following the format "version:[groupId]:[artifactId]=[version]" for
 each overridden dependency.  The format of this property can be customized using command line
 system properties.
 
@@ -112,7 +112,7 @@ system properties.
     versionPropertyGASeparator - Defaults to ":"
     versionPropertySuffix - Defaults to empty string ""
 
-For example, the version property format could be set to "my.<groupId>_<artifactId>.version=<version>"
+For example, the version property format could be set to "my.[groupId]_[artifactId].version=[version]"
 
     mvn install -DversionPropertyPrefix="my." -DversionPropertyGASeparator="_" -DversionPropertySuffix=".version"
 
