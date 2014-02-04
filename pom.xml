@@ -210,7 +210,6 @@
                     <pomInclude>*-pom-ext/pom.xml</pomInclude>
                   </pomIncludes>
                   <projectsDirectory>src/it</projectsDirectory>
-                  <postBuildHookScript>verify</postBuildHookScript>
                   <settingsFile>src/it/settings.xml</settingsFile>
                 </configuration>
               </execution>
@@ -238,7 +237,6 @@
                     <pomExclude>*-pom-ext/pom.xml</pomExclude>
                   </pomExcludes>
                   <projectsDirectory>src/it</projectsDirectory>
-                  <postBuildHookScript>verify</postBuildHookScript>
                   <settingsFile>src/it/settings.xml</settingsFile>
                 </configuration>
               </execution>
