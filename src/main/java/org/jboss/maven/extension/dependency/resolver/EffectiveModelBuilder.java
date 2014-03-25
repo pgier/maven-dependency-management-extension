@@ -17,6 +17,7 @@ package org.jboss.maven.extension.dependency.resolver;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +27,13 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.building.DefaultModelBuildingRequest;
+import org.apache.maven.model.building.DefaultModelProblem;
 import org.apache.maven.model.building.ModelBuilder;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
+import org.apache.maven.model.building.ModelProblem;
+import org.apache.maven.model.io.ModelParseException;
 import org.apache.maven.model.resolution.ModelResolver;
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.codehaus.plexus.PlexusContainerException;
@@ -100,7 +104,7 @@ public class EffectiveModelBuilder
     /**
      * Set the list of remote repositories from which to download dependency management poms.
      * 
-     * @param repositories
+     * @param repository
      */
     public void addRepository( ArtifactRepository repository )
     {
@@ -168,6 +172,14 @@ public class EffectiveModelBuilder
 
         Model effectiveModel = buildModel( artifact.getFile(), modelResolver );
         Log.getLog().debug( "Built model for project: " + effectiveModel.getName() );
+
+        if ( effectiveModel.getDependencyManagement() == null )
+        {
+            ModelProblem dmp = new DefaultModelProblem(
+                                         "Attempting to align to a BOM that does not have a dependencyManagement section",
+                                         null, null, -1, -1, null );
+            throw new ModelBuildingException( effectiveModel, effectiveModel.getId(), Collections.singletonList( dmp ) );
+        }
 
         for ( org.apache.maven.model.Dependency dep : effectiveModel.getDependencyManagement().getDependencies() )
         {
