@@ -235,7 +235,15 @@ public class DepVersionOverrider
                 String moduleGA = artifactAndModule[1];
                 if ( moduleGA.equals( projectGA ) )
                 {
-                    moduleVersionOverrides.put( artifactGA, versionOverrides.get( currentKey ) );
+                    if ( versionOverrides.get( currentKey) != null && versionOverrides.get( currentKey).length() > 0)
+                    {
+                        moduleVersionOverrides.put( artifactGA, versionOverrides.get( currentKey ) );
+                    }
+                    else
+                    {
+                        moduleVersionOverrides.remove(artifactGA);
+                        Log.getLog().debug("Ignoring module dependency override for " + moduleGA);
+                    }
                 }
             }
         }
