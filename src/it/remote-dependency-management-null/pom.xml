@@ -24,10 +24,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.jboss.maven.extension.dependency</groupId>
-  <artifactId>remote-dependency-management-override-empty</artifactId>
+  <artifactId>remote-dependency-management-override-null</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>Test override dependency version using remote BOM with empty does not fail</name>
+  <name>Test override dependency version using remote BOM with no dep mgmt does not fail</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
