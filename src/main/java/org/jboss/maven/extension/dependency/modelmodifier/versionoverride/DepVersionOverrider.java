@@ -325,7 +325,7 @@ public class DepVersionOverrider
 
                 if (overrideVersion == null || overrideVersion.length() == 0)
                 {
-                    Log.getLog().warn("Unable to align to an empty version; ignoring");
+                    Log.getLog().warn("Unable to align to an empty version for " + groupIdArtifactId + "; ignoring");
                 }
                 else
                 {
